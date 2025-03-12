@@ -177,7 +177,7 @@ export default function AssignmentEditor() {
                     <Button 
                         type="submit"
                         variant="danger"
-                        onClick={(e) => {
+                        onClick={() => {
                         }}
                     >
                         Save
