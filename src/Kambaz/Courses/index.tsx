@@ -6,13 +6,15 @@ import Assignments from "./Assignments";
 import AssignmentEditor from "./Assignments/Editor";
 import { FaAlignJustify } from "react-icons/fa";
 import PeopleTable from "./People/Table";
-import { courses } from "../Database";
 import { useParams, useLocation } from "react-router";
+import { useSelector } from "react-redux";
 
 export default function Courses() {
+  const { courses } = useSelector((state: any) => state.coursesReducer);
   const { pathname } = useLocation();
   const { cid } = useParams();
-  const course = courses.find((course) => course._id === cid);
+  const course = courses.find((course: any) => course._id === cid);
+  
   const pathParts = pathname.split("/");
   const currentSection = pathParts[pathParts.length - 1] || "Home";
 
