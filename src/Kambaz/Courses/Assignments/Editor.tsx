@@ -13,10 +13,7 @@ export default function AssignmentEditor() {
     
 
 
-    const assignments = useSelector((state: any) => {
- 
-        return state.assignmentsReducer.assignments;
-    });
+
 
     const assignment = useSelector((state: any) => 
         state.assignmentsReducer.assignments.find((a: any) => a._id === aid)
