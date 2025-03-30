@@ -3,7 +3,7 @@ import { ListGroup, Modal } from "react-bootstrap";
 import { BsGripVertical, BsSearch, BsPlusLg, BsThreeDotsVertical, BsFileText, BsCheckCircleFill, BsTrash } from "react-icons/bs";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { deleteAssignment, removeAssignment, fetchAssignments } from "./reducer";
+import { removeAssignment, fetchAssignments } from "./reducer";
 import { AppDispatch } from '../../store';
 
 

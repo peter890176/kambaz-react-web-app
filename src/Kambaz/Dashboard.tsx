@@ -5,7 +5,7 @@ import { Row } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { useSelector, useDispatch } from "react-redux";
-import { addCourse, deleteCourse, updateCourse, setSelectedCourse } from "./Courses/reducer";
+import { addCourse,  setSelectedCourse } from "./Courses/reducer";
 import { toggleShowAllCourses, enrollInCourse, unenrollFromCourse } from "./Enrollments/reducer";
 import { AppDispatch } from './store';
 

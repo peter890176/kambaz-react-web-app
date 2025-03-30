@@ -5,7 +5,6 @@ import KambazNavigation from "./Navigation";
 import Courses from "./Courses";
 import ProtectedRoute from "./Account/ProtectedRoute";
 import Session from "./Account/Session";
-import * as client from "./Courses/client";
 import * as courseClient from "./Courses/client";
 import * as userClient from "./Account/client";
 import { useState } from "react";
@@ -31,7 +30,7 @@ export default function Kambaz() {
     }
   };
   const deleteCourse = async (courseId: string) => {
-    const status = await courseClient.deleteCourse(courseId);
+    await courseClient.deleteCourse(courseId);
     setCourses(courses.filter((course) => course._id !== courseId));
   };
 
