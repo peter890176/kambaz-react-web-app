@@ -7,9 +7,18 @@ import { v4 as uuidv4 } from "uuid";
 import { useSelector, useDispatch } from "react-redux";
 import { addCourse, deleteCourse, updateCourse, setSelectedCourse } from "./Courses/reducer";
 import { toggleShowAllCourses, enrollInCourse, unenrollFromCourse } from "./Enrollments/reducer";
+import { AppDispatch } from './store';
 
-export default function Dashboard() {
-  const dispatch = useDispatch();
+export default function Dashboard({ 
+  addNewCourse, 
+    deleteCourse,
+  updateCourse
+}: { 
+  addNewCourse: () => Promise<void>;
+  deleteCourse: (courseId: string) => Promise<void>;
+  updateCourse: (course: any) => Promise<void>;
+}) {
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { courses, selectedCourse } = useSelector((state: any) => state.coursesReducer);
   const { currentUser } = useSelector((state: any) => state.accountReducer);
@@ -42,15 +51,10 @@ export default function Dashboard() {
 
   const handleCourseClick = (courseId: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (isStudent && !isEnrolled(courseId)) {
-      return; 
-    }
     navigate(`/Kambaz/Courses/${courseId}/Home`);
   };
 
-  const displayedCourses = showAllCourses || !isStudent
-    ? courses
-    : courses.filter((course: any) => isEnrolled(course._id));
+  const displayedCourses = courses;
 
   return (
     <div id="wd-dashboard">
@@ -60,9 +64,12 @@ export default function Dashboard() {
           <h5>New Course
             <button className="btn btn-primary float-end"
                     id="wd-add-new-course-click"
-                    onClick={() => dispatch(addCourse({ ...newCourse, _id: uuidv4() }))} > Add </button>
+                    onClick={async () => {
+                      await addNewCourse();
+                      dispatch(addCourse({ ...newCourse, _id: uuidv4() }));
+                    }} > Add </button>
             <button className="btn btn-warning float-end me-2"
-                    onClick={() => selectedCourse && dispatch(updateCourse(selectedCourse))} 
+                      onClick={() => selectedCourse && updateCourse(selectedCourse)} 
                     id="wd-update-course-click">
               Update
             </button>
@@ -120,7 +127,7 @@ export default function Dashboard() {
                       <>
                         <button onClick={(e) => {
                           e.preventDefault();
-                          dispatch(deleteCourse(course._id));
+                          deleteCourse(course._id);
                         }} className="btn btn-danger">
                           Delete
                         </button>
