@@ -1,23 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, FormControl } from "react-bootstrap";
 import { Card } from "react-bootstrap";
 import { Row } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { useSelector, useDispatch } from "react-redux";
-import { addCourse,  setSelectedCourse } from "./Courses/reducer";
+import { addCourse, deleteCourse, setSelectedCourse, updateCourse} from "./Courses/reducer";
 import { toggleShowAllCourses, enrollInCourse, unenrollFromCourse } from "./Enrollments/reducer";
 import { AppDispatch } from './store';
 
-export default function Dashboard({ 
-  addNewCourse, 
-    deleteCourse,
-  updateCourse
-}: { 
-  addNewCourse: () => Promise<void>;
-  deleteCourse: (courseId: string) => Promise<void>;
-  updateCourse: (course: any) => Promise<void>;
-}) {
+export default function Dashboard() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { courses, selectedCourse } = useSelector((state: any) => state.coursesReducer);
@@ -30,6 +22,8 @@ export default function Dashboard({
 
   const isStudent = currentUser.role === "STUDENT";
   const isFaculty = currentUser.role === "FACULTY";
+  const isTA = currentUser.role === "TA";
+  const isAdmin = currentUser.role === "ADMIN";
 
   const isEnrolled = (courseId: string) => {
     return enrollments.some(
@@ -54,7 +48,18 @@ export default function Dashboard({
     navigate(`/Kambaz/Courses/${courseId}/Home`);
   };
 
-  const displayedCourses = courses;
+  const displayedCourses = (showAllCourses || isAdmin || isTA || isFaculty)
+    ? courses 
+    : courses.filter((course: any) => isEnrolled(course._id));
+
+  useEffect(() => {
+    if (selectedCourse) {
+      setNewCourse({
+        name: selectedCourse.name,
+        description: selectedCourse.description
+      });
+    }
+  }, [selectedCourse]);
 
   return (
     <div id="wd-dashboard">
@@ -64,12 +69,15 @@ export default function Dashboard({
           <h5>New Course
             <button className="btn btn-primary float-end"
                     id="wd-add-new-course-click"
-                    onClick={async () => {
-                      await addNewCourse();
+                    onClick={() => {
                       dispatch(addCourse({ ...newCourse, _id: uuidv4() }));
                     }} > Add </button>
             <button className="btn btn-warning float-end me-2"
-                      onClick={() => selectedCourse && updateCourse(selectedCourse)} 
+                      onClick={() => {
+                        if (selectedCourse) {
+                          dispatch(updateCourse({ ...selectedCourse, name: newCourse.name, description: newCourse.description }));
+                        }
+                      }} 
                     id="wd-update-course-click">
               Update
             </button>
@@ -85,7 +93,7 @@ export default function Dashboard({
 
       <div className="d-flex justify-content-between align-items-center">
         <h2 id="wd-dashboard-published">Published Courses ({displayedCourses.length})</h2>
-        {isStudent && (
+        {(isStudent || isAdmin ) && (
           <Button
             variant="primary"
             onClick={() => dispatch(toggleShowAllCourses())}
@@ -127,7 +135,7 @@ export default function Dashboard({
                       <>
                         <button onClick={(e) => {
                           e.preventDefault();
-                          deleteCourse(course._id);
+                          dispatch(deleteCourse(course._id));
                         }} className="btn btn-danger">
                           Delete
                         </button>

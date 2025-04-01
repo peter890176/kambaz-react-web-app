@@ -13,12 +13,25 @@ import * as coursesClient from "../client";
 import * as modulesClient from "./client";
 
 export default function Modules() {
+
+  
   const { cid } = useParams();
 
   const [moduleName, setModuleName] = useState("");
   
   const { modules } = useSelector((state: any) => state.modulesReducer);
   const dispatch = useDispatch();
+
+  const addModuleHandler = async () => {
+    const newModule = await coursesClient.createModuleForCourse(cid!, {
+      name: moduleName,
+      course: cid,
+    });
+    dispatch(addModule(newModule));
+    setModuleName("");
+  };
+
+  
   const saveModule = async (module: any) => {
     await modulesClient.updateModule(module);
     dispatch(updateModule(module));
@@ -29,21 +42,22 @@ export default function Modules() {
     dispatch(deleteModule(moduleId));
   };
 
-  
-
-
-  const createModuleForCourse = async () => {
-    if (!cid) return;
-    const newModule = { name: moduleName, course: cid };
-    const module = await coursesClient.createModuleForCourse(cid, newModule);
-    dispatch(addModule(module));
-  };
 
 
   const fetchModules = async () => {
     const modules = await coursesClient.findModulesForCourse(cid as string);
     dispatch(setModules(modules));
   };
+
+
+  const fetchModulesForCourse = async () => {
+    const modules = await coursesClient.findModulesForCourse(cid!);
+    dispatch(setModules(modules));
+  };
+  useEffect(() => {
+    fetchModulesForCourse();
+  }, [cid]);
+ 
   useEffect(() => {
     fetchModules();
   }, []);
@@ -53,7 +67,7 @@ export default function Modules() {
   
   return (
     <div>
-      <ModulesControls setModuleName={setModuleName} moduleName={moduleName} addModule={createModuleForCourse} />
+      <ModulesControls  addModule={addModuleHandler} setModuleName={setModuleName} moduleName={moduleName} />
       <br /><br /><br /><br />
       <ListGroup className="rounded-0" id="wd-modules">
         {modules

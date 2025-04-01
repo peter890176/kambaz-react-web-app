@@ -17,7 +17,7 @@ export default function Kambaz() {
   const { currentUser } = useSelector((state: any) => state.accountReducer);
 
   const addNewCourse = async () => {
-    const newCourse = await userClient.createCourse(courses);
+    const newCourse = await courseClient.createCourse(courses);
     setCourses([...courses, newCourse]);
   };
 
