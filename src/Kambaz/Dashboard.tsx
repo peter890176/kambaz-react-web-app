@@ -9,10 +9,18 @@ import { addCourse, deleteCourse, setSelectedCourse, updateCourse} from "./Cours
 import { toggleShowAllCourses, enrollInCourse, unenrollFromCourse } from "./Enrollments/reducer";
 import { AppDispatch } from './store';
 
-export default function Dashboard() {
+export default function Dashboard({ 
+  enrolling, 
+  setEnrolling,
+  updateEnrollment
+}: { 
+  enrolling: boolean; 
+  setEnrolling: (enrolling: boolean) => void;
+  updateEnrollment: (courseId: string, enrolled: boolean) => void;
+}) {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { courses, selectedCourse } = useSelector((state: any) => state.coursesReducer);
+  const { courses: reduxCourses, selectedCourse } = useSelector((state: any) => state.coursesReducer);
   const { currentUser } = useSelector((state: any) => state.accountReducer);
   const { enrollments, showAllCourses } = useSelector((state: any) => state.enrollmentsReducer);
   const [newCourse, setNewCourse] = useState({
@@ -49,8 +57,8 @@ export default function Dashboard() {
   };
 
   const displayedCourses = (showAllCourses || isAdmin || isTA || isFaculty)
-    ? courses 
-    : courses.filter((course: any) => isEnrolled(course._id));
+    ? reduxCourses
+    : reduxCourses.filter((course: any) => isEnrolled(course._id));
 
   useEffect(() => {
     if (selectedCourse) {
@@ -63,7 +71,12 @@ export default function Dashboard() {
 
   return (
     <div id="wd-dashboard">
-      <h1 id="wd-dashboard-title">Dashboard</h1> <hr />
+      <h1 id="wd-dashboard-title">
+        Dashboard
+        <button onClick={() => setEnrolling(!enrolling)} className="float-end btn btn-primary" >
+          {enrolling ? "My Courses" : "All Courses"}
+        </button>
+      </h1> <hr />
       {isFaculty && (
         <>
           <h5>New Course
@@ -147,22 +160,18 @@ export default function Dashboard() {
                         </button>
                       </>
                     )}
-                    {isStudent && (
-                      isEnrolled(course._id) ? (
-                        <button
-                          onClick={(e) => handleUnenrollClick(course._id, e)}
-                          className="btn btn-danger"
-                        >
-                          Unenroll
-                        </button>
-                      ) : (
-                        <button
-                          onClick={(e) => handleEnrollClick(course._id, e)}
-                          className="btn btn-success"
-                        >
-                          Enroll
-                        </button>
-                      )
+                    {enrolling && (
+                      <button 
+                        className={`btn ${isEnrolled(course._id) ? "btn-danger" : "btn-success"} float-end`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          isEnrolled(course._id) 
+                            ? handleUnenrollClick(course._id, e) 
+                            : handleEnrollClick(course._id, e);
+                        }}
+                      >
+                        {isEnrolled(course._id) ? "Unenroll" : "Enroll"}
+                      </button>
                     )}
                   </div>
                 </Card.Body>

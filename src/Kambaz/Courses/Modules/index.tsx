@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router";
 import ModulesControls from "./ModulesControls";
 import { FormControl, ListGroup } from "react-bootstrap";
@@ -31,16 +30,25 @@ export default function Modules() {
     setModuleName("");
   };
 
+  const deleteModuleHandler = async (moduleId: string) => {
+    await modulesClient.deleteModule(moduleId);
+    dispatch(deleteModule(moduleId));
+  };
+ 
+
   
   const saveModule = async (module: any) => {
     await modulesClient.updateModule(module);
     dispatch(updateModule(module));
   };
 
-  const removeModule = async (moduleId: string) => {
-    await modulesClient.deleteModule(moduleId);
-    dispatch(deleteModule(moduleId));
+
+  const updateModuleHandler = async (module: any) => {
+    await modulesClient.updateModule(module);
+    dispatch(updateModule(module));
   };
+ 
+
 
 
 
@@ -76,23 +84,18 @@ export default function Modules() {
               <div className="wd-title p-3 ps-2 bg-secondary">
                 <BsGripVertical className="me-2 fs-3" /> {module.name} 
                 {!module.editing && module.name}
-      { module.editing && (
-        <FormControl className="w-50 d-inline-block"
-               onChange={(e) =>dispatch(
-                updateModule({ ...module, name: e.target.value })
-              )}
-               onKeyDown={(e) => {
-                 if (e.key === "Enter") {
-                  saveModule({ ...module, editing: false });
-                 }
-               }}
-               defaultValue={module.name}/>
-      )}
+                {module.editing && (
+                  <input onChange={(e) =>
+                    updateModuleHandler({ ...module, name: e.target.value }) }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        updateModuleHandler({ ...module, editing: false });
+                      }
+                    }}
+                    value={module.name}/>
+                )}
 
-                <ModuleControlButtons  moduleId={module._id}
-        deleteModule={(moduleId) => removeModule(moduleId)}
-
-        editModule={(moduleId) => dispatch(editModule(moduleId))}/>
+                <ModuleControlButtons  moduleId={module._id} deleteModule={(moduleId) => deleteModuleHandler(moduleId)} editModule={(moduleId) => dispatch(editModule(moduleId))}/>
               </div>
               {module.lessons && (
                 <ListGroup className="wd-lessons rounded-0">
