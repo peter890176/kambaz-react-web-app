@@ -1,3 +1,5 @@
+//modified by Claude3.7
+
 import { useState, useEffect } from "react";
 import { Button, FormControl } from "react-bootstrap";
 import { Card } from "react-bootstrap";
@@ -6,7 +8,15 @@ import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { useSelector, useDispatch } from "react-redux";
 import { addCourse, deleteCourse, setSelectedCourse, updateCourse} from "./Courses/reducer";
-import { toggleShowAllCourses, enrollInCourse, unenrollFromCourse } from "./Enrollments/reducer";
+import { 
+  toggleShowAllCourses, 
+  enrollInCourse, 
+  unenrollFromCourse,
+  fetchUserEnrollments, 
+  setUserEnrollments, 
+  addEnrollment, 
+  removeEnrollment 
+} from "./Enrollments/reducer";
 import { AppDispatch } from './store';
 
 export default function Dashboard({ 
@@ -34,6 +44,10 @@ export default function Dashboard({
   const isAdmin = currentUser.role === "ADMIN";
 
   const isEnrolled = (courseId: string) => {
+    if (!enrollments || !Array.isArray(enrollments)) {
+      return false;
+    }
+    
     return enrollments.some(
       (enrollment: any) =>
         enrollment.user === currentUser._id &&
@@ -43,12 +57,58 @@ export default function Dashboard({
 
   const handleEnrollClick = (courseId: string, e: React.MouseEvent) => {
     e.preventDefault();
-    dispatch(enrollInCourse({ userId: currentUser._id, courseId }));
+    
+    if (isEnrolled(courseId)) {
+      console.log(`User ${currentUser._id} already enrolled in course ${courseId}`);
+      return;
+    }
+    
+    dispatch(enrollInCourse({ userId: currentUser._id, courseId }))
+      .unwrap()
+      .then(enrollmentData => {
+        console.log('Enrollment successful:', enrollmentData);
+        
+        dispatch(addEnrollment({
+          _id: enrollmentData._id || `${currentUser._id}-${courseId}`,
+          user: currentUser._id,
+          course: courseId
+        }));
+      })
+      .catch(error => {
+        console.error('Enrollment error:', error);
+        
+        if (error?.code === 11000 || (error?.response?.data?.code === 11000)) {
+          console.log('User already enrolled, updating local state');
+          dispatch(addEnrollment({
+            _id: `${currentUser._id}-${courseId}`,
+            user: currentUser._id,
+            course: courseId
+          }));
+        }
+      });
   };
 
   const handleUnenrollClick = (courseId: string, e: React.MouseEvent) => {
     e.preventDefault();
-    dispatch(unenrollFromCourse({ userId: currentUser._id, courseId }));
+    
+    if (!isEnrolled(courseId)) {
+      console.log(`User ${currentUser._id} not enrolled in course ${courseId}`);
+      return;
+    }
+    
+    dispatch(unenrollFromCourse({ userId: currentUser._id, courseId }))
+      .unwrap()
+      .then(result => {
+        console.log('Unenrollment successful:', result);
+        
+        dispatch(removeEnrollment({
+          userId: currentUser._id,
+          courseId
+        }));
+      })
+      .catch(error => {
+        console.error('Unenrollment error:', error);
+      });
   };
 
   const handleCourseClick = (courseId: string, e: React.MouseEvent) => {
@@ -68,6 +128,22 @@ export default function Dashboard({
       });
     }
   }, [selectedCourse]);
+
+  useEffect(() => {
+    if (currentUser && currentUser._id) {
+      console.log('Dashboard mounted, fetching user enrollments:', currentUser._id);
+      
+      dispatch(fetchUserEnrollments(currentUser._id))
+        .unwrap()
+        .then(enrollmentsData => {
+          console.log('Received enrollment data:', enrollmentsData);
+          dispatch(setUserEnrollments(Array.isArray(enrollmentsData) ? enrollmentsData : []));
+        })
+        .catch(error => {
+          console.error('Failed to fetch enrollment records:', error);
+        });
+    }
+  }, [currentUser, dispatch]);
 
   return (
     <div id="wd-dashboard">
