@@ -166,8 +166,8 @@ export default function Dashboard({
     <div id="wd-dashboard">
       <h1 id="wd-dashboard-title">
         Dashboard
-        <button onClick={() => setEnrolling(!enrolling)} className="float-end btn btn-primary" >
-          {enrolling ? "My Courses" : "All Courses"}
+        <button onClick={() => dispatch(toggleShowAllCourses())} className="float-end btn btn-primary" >
+          {showAllCourses ? "My Courses" : "All Courses"}
         </button>
       </h1> <hr />
       {isFaculty && (
@@ -202,7 +202,7 @@ export default function Dashboard({
 
       <div className="d-flex justify-content-between align-items-center">
         <h2 id="wd-dashboard-published">Published Courses ({displayedCourses.length})</h2>
-        {(isStudent || isAdmin ) && (
+        {/*{(isStudent || isAdmin ) && (
           <Button
             variant="primary"
             onClick={() => dispatch(toggleShowAllCourses())}
@@ -210,7 +210,7 @@ export default function Dashboard({
           >
             {showAllCourses ? "Show My Courses" : "Show All Courses"}
           </Button>
-        )}
+        )}*/}
       </div>
       <hr />
 
