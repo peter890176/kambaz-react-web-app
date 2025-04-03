@@ -18,15 +18,14 @@ import {
   removeEnrollment 
 } from "./Enrollments/reducer";
 import { AppDispatch } from './store';
+import * as enrollmentClient from "./Enrollments/client";
 
 export default function Dashboard({ 
   enrolling, 
   setEnrolling,
-  updateEnrollment
 }: { 
   enrolling: boolean; 
   setEnrolling: (enrolling: boolean) => void;
-  updateEnrollment: (courseId: string, enrolled: boolean) => void;
 }) {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -137,13 +136,31 @@ export default function Dashboard({
         .unwrap()
         .then(enrollmentsData => {
           console.log('Received enrollment data:', enrollmentsData);
-          dispatch(setUserEnrollments(Array.isArray(enrollmentsData) ? enrollmentsData : []));
+          
+          if (!enrollmentsData || !Array.isArray(enrollmentsData) || enrollmentsData.length === 0) {
+            console.log('API returned empty data, checking with individual API calls');
+            
+            reduxCourses.forEach((course: {_id: string}) => {
+              enrollmentClient.isUserEnrolledInCourse(currentUser._id, course._id)
+                .then((isEnrolled: boolean) => {
+                  if (isEnrolled) {
+                    dispatch(addEnrollment({
+                      _id: `${currentUser._id}-${course._id}`,
+                      user: currentUser._id,
+                      course: course._id
+                    }));
+                  }
+                });
+            });
+          } else {
+            dispatch(setUserEnrollments(enrollmentsData));
+          }
         })
         .catch(error => {
           console.error('Failed to fetch enrollment records:', error);
         });
     }
-  }, [currentUser, dispatch]);
+  }, [currentUser, dispatch, reduxCourses]);
 
   return (
     <div id="wd-dashboard">

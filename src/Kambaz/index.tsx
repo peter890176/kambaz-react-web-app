@@ -104,7 +104,7 @@ export default function Kambaz() {
             <Route path="Account/*" element={<Account />} />
             <Route path="Dashboard" element={
               <ProtectedRoute>
-                <Dashboard enrolling={enrolling} setEnrolling={setEnrolling} updateEnrollment={updateEnrollment}/>
+                <Dashboard enrolling={enrolling} setEnrolling={setEnrolling}/>
               </ProtectedRoute>
             } />
             <Route path="Courses/:cid/*" element={
