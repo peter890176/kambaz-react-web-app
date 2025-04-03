@@ -35,7 +35,7 @@ export const findEnrollmentsByCourse = async (courseId: string) => {
 export const enrollUserInCourse = async (userId: string, courseId: string) => {
   try {
     const response = await axiosWithCredentials.post(
-      `${REMOTE_SERVER}/api/users/${userId}/courses/${courseId}/enroll`
+      `${REMOTE_SERVER}/api/users/${userId}/courses/${courseId}`
     );
     return response.data;
   } catch (error) {

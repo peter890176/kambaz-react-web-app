@@ -176,7 +176,10 @@ export default function Dashboard({
             <button className="btn btn-primary float-end"
                     id="wd-add-new-course-click"
                     onClick={() => {
-                      dispatch(addCourse({ ...newCourse, _id: uuidv4() }));
+                      const newCourseId = uuidv4();
+                      const newCourseData = { ...newCourse, _id: newCourseId };
+                      dispatch(addCourse(newCourseData));
+                      dispatch(enrollInCourse({ userId: currentUser._id, courseId: newCourseId }));
                     }} > Add </button>
             <button className="btn btn-warning float-end me-2"
                       onClick={() => {
