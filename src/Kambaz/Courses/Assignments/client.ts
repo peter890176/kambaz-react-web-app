@@ -13,6 +13,7 @@ export const findAllAssignments = async () => {
   }
 };
 
+
 export const findAssignmentsForModule = async (moduleId: string) => {
   try {
     const response = await axios.get(`${MODULES_API}/${moduleId}/assignments`);

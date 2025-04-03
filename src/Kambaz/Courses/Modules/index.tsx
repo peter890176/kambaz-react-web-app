@@ -1,6 +1,6 @@
 import { useParams } from "react-router";
 import ModulesControls from "./ModulesControls";
-import { FormControl, ListGroup } from "react-bootstrap";
+import { ListGroup } from "react-bootstrap";
 import { BsGripVertical } from "react-icons/bs";
 import ModuleControlButtons from "./ModuleControlButtons";
 import LessonControlButtons from "./LessonControlButtons";
@@ -35,14 +35,6 @@ export default function Modules() {
     dispatch(deleteModule(moduleId));
   };
  
-
-  
-  const saveModule = async (module: any) => {
-    await modulesClient.updateModule(module);
-    dispatch(updateModule(module));
-  };
-
-
   const updateModuleHandler = async (module: any) => {
     await modulesClient.updateModule(module);
     dispatch(updateModule(module));

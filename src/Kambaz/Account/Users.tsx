@@ -73,7 +73,7 @@ export default function Users() {
                     <option value="ADMIN">Administrators</option>
                 </select>
             </div>
-            <PeopleTable users={users} />
+            <PeopleTable />
         </div>
     );
 }

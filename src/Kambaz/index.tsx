@@ -14,12 +14,11 @@ import { useSelector } from "react-redux";
 
 export default function Kambaz() {
   const [courses, setCourses] = useState<any[]>([]);
-  const [course, setCourse] = useState<any>(null);
   const { currentUser } = useSelector((state: any) => state.accountReducer);
 
   const [enrolling, setEnrolling] = useState<boolean>(false);
 
-
+/*
   const addNewCourse = async () => {
     const newCourse = await courseClient.createCourse(courses);
     setCourses([...courses, newCourse]);
@@ -38,6 +37,7 @@ export default function Kambaz() {
       else { return c; }
     }));
   };
+  */
 
   const findCoursesForUser = async () => {
     try {
@@ -66,6 +66,7 @@ export default function Kambaz() {
     }
   };
 
+  /*
    const updateEnrollment = async (courseId: string, enrolled: boolean) => {
    if (enrolled) {
      await userClient.enrollIntoCourse(currentUser._id, courseId);
@@ -82,7 +83,7 @@ export default function Kambaz() {
      })
    );
  };
-
+*/
   
 
 

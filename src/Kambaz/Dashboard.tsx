@@ -22,7 +22,6 @@ import * as enrollmentClient from "./Enrollments/client";
 
 export default function Dashboard({ 
   enrolling, 
-  setEnrolling,
 }: { 
   enrolling: boolean; 
   setEnrolling: (enrolling: boolean) => void;
@@ -37,7 +36,6 @@ export default function Dashboard({
     description: "New Description"
   });
 
-  const isStudent = currentUser.role === "STUDENT";
   const isFaculty = currentUser.role === "FACULTY";
   const isTA = currentUser.role === "TA";
   const isAdmin = currentUser.role === "ADMIN";
