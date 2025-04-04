@@ -47,6 +47,8 @@ export default function AssignmentEditor() {
             due: (form.querySelector('#wd-due') as HTMLInputElement).value,
             availableFrom: (form.querySelector('#wd-available-from') as HTMLInputElement).value,
             availableUntil: (form.querySelector('#wd-available-until') as HTMLInputElement).value,
+            type: (form.querySelector('#wd-type') as HTMLSelectElement).value,
+            gradeDisplay: (form.querySelector('#wd-grade-display') as HTMLSelectElement).value
         };
 
         handleAddAssignment(formData);
@@ -89,7 +91,7 @@ export default function AssignmentEditor() {
                     <Form.Label className="me-3 mb-0" style={{ width: '150px' }}>
                         Assignment Group
                     </Form.Label>
-                    <Form.Select style={{ textTransform: 'uppercase' }}>
+                    <Form.Select id="wd-type" style={{ textTransform: 'uppercase' }}>
                         <option>Assignments</option>
                         <option>Quizzes</option>
                         <option>Exams</option>
@@ -101,7 +103,7 @@ export default function AssignmentEditor() {
                     <Form.Label className="me-3 mb-0" style={{ width: '150px' }}>
                         Display Grade as
                     </Form.Label>
-                    <Form.Select>
+                    <Form.Select id="wd-grade-display">
                         <option>Percentage</option>
                         <option>Letter</option>
                     </Form.Select>
