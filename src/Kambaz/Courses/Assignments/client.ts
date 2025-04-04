@@ -1,7 +1,7 @@
 import axios from "axios";
 const REMOTE_SERVER = import.meta.env.VITE_REMOTE_SERVER;
 const ASSIGNMENTS_API = `${REMOTE_SERVER}/api/assignments`;
-const MODULES_API = `${REMOTE_SERVER}/api/modules`;
+const COURSES_API = `${REMOTE_SERVER}/api/courses`;
 
 export const findAllAssignments = async () => {
   try {
@@ -13,21 +13,20 @@ export const findAllAssignments = async () => {
   }
 };
 
-
-export const findAssignmentsForModule = async (moduleId: string) => {
+export const findAssignmentsForCourse = async (courseId: string) => {
   try {
-    const response = await axios.get(`${MODULES_API}/${moduleId}/assignments`);
+    const response = await axios.get(`${COURSES_API}/${courseId}/assignments`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching module assignments:", error);
+    console.error("Error fetching course assignments:", error);
     return [];
   }
 };
 
-export const createAssignment = async (moduleId: string, assignment: any) => {
+export const createAssignment = async (courseId: string, assignment: any) => {
   try {
     const response = await axios.post(
-      `${MODULES_API}/${moduleId}/assignments`,
+      `${COURSES_API}/${courseId}/assignments`,
       assignment
     );
     return response.data;
