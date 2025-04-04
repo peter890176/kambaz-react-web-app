@@ -64,6 +64,7 @@ export default function AssignmentEditor() {
                     <Form.Control 
                         id="wd-name" 
                         defaultValue={assignment?.title || ""} 
+                        required
                     />
                 </Form.Group>
 
@@ -73,6 +74,7 @@ export default function AssignmentEditor() {
                         id="wd-description"
                         rows={3}
                         defaultValue={assignment?.description || ""}
+                        required
                     />
                 </Form.Group>
 
@@ -84,6 +86,7 @@ export default function AssignmentEditor() {
                         id="wd-points"
                         type="number" 
                         defaultValue={assignment?.points || 100} 
+                        required
                     />
                 </div>
 
@@ -91,7 +94,7 @@ export default function AssignmentEditor() {
                     <Form.Label className="me-3 mb-0" style={{ width: '150px' }}>
                         Assignment Group
                     </Form.Label>
-                    <Form.Select id="wd-type" style={{ textTransform: 'uppercase' }}>
+                    <Form.Select id="wd-type" style={{ textTransform: 'uppercase' }} required>
                         <option>Assignments</option>
                         <option>Quizzes</option>
                         <option>Exams</option>
@@ -103,7 +106,7 @@ export default function AssignmentEditor() {
                     <Form.Label className="me-3 mb-0" style={{ width: '150px' }}>
                         Display Grade as
                     </Form.Label>
-                    <Form.Select id="wd-grade-display">
+                    <Form.Select id="wd-grade-display" required>
                         <option>Percentage</option>
                         <option>Letter</option>
                     </Form.Select>
@@ -146,6 +149,7 @@ export default function AssignmentEditor() {
                         id="wd-due"
                         type="datetime-local" 
                         defaultValue={assignment?.due || "2024-05-13T23:59"} 
+                        required
                     />
                 </div>
 
@@ -156,6 +160,7 @@ export default function AssignmentEditor() {
                             id="wd-available-from"
                             type="datetime-local" 
                             defaultValue={assignment?.availableFrom || "2024-05-06T12:00"} 
+                            required
                         />
                     </div>
                     <div className="flex-grow-1">
@@ -164,6 +169,7 @@ export default function AssignmentEditor() {
                             id="wd-available-until"
                             type="datetime-local"
                             defaultValue={assignment?.availableUntil} 
+                            required
                         />
                     </div>
                 </div>
