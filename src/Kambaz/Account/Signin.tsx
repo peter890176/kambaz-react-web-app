@@ -10,6 +10,8 @@ export default function Signin() {
        const [credentials, setCredentials] = useState<any>({});
        const dispatch = useDispatch();
        const navigate = useNavigate();
+
+       console.log(credentials);
        const signin = async () => {
         const user =  await client.signin(credentials);
         if (!user) return;
