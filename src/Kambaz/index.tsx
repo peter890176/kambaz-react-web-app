@@ -9,7 +9,13 @@ import * as courseClient from "./Courses/client";
 import * as userClient from "./Account/client";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-
+import { 
+  QuizzesList, 
+  QuizDetails, 
+  QuizEditor, 
+  QuizAttempt, 
+  QuizResults 
+} from './Quizzes';
 
 
 export default function Kambaz() {
@@ -110,6 +116,13 @@ export default function Kambaz() {
             } />
             <Route path="Calendar" element={<h1>Calendar</h1>} />
             <Route path="Inbox" element={<h1>Inbox</h1>} />
+            <Route path="Courses/:cid/Quizzes/new" element={<QuizEditor />} />
+            <Route path="Courses/:cid/Quizzes" element={<QuizzesList />} />
+            <Route path="courses/:courseId/quizzes" element={<QuizzesList />} />
+            <Route path="Quizzes/:quizId/edit" element={<QuizEditor />} />
+            <Route path="Quizzes/:quizId" element={<QuizDetails />} />
+            <Route path="Quizzes/:quizId/attempt" element={<QuizAttempt />} />
+            <Route path="Attempts/:attemptId/results" element={<QuizResults />} />
           </Routes>
         </div>
       </div>
