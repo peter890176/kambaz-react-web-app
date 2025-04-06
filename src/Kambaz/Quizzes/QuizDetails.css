@@ -1,0 +1,119 @@
+/* 測驗詳情頁面樣式 */
+.quiz-details-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0;
+}
+
+.action-buttons .btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+}
+
+.action-buttons .btn svg {
+  margin-right: 0.5rem;
+}
+
+/* 卡片樣式 */
+.quiz-details-card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  margin-bottom: 2rem;
+}
+
+.quiz-card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  padding: 1rem;
+}
+
+/* 屬性表格樣式 */
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f0f0f0;
+  color: #333;
+}
+
+.property-table {
+  margin-bottom: 2rem;
+}
+
+.property-table td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+.property-name {
+  width: 220px;
+  font-weight: 600;
+  color: #555;
+  background-color: #f8f9fa;
+}
+
+/* 問題列表樣式 */
+.question-list {
+  margin-top: 1rem;
+}
+
+.question-item {
+  padding: 1rem;
+  border-left: 3px solid #6c757d;
+  transition: all 0.2s ease;
+}
+
+.question-item:hover {
+  border-left-color: #0d6efd;
+  background-color: #f8f9fa;
+}
+
+.question-number {
+  font-weight: 600;
+  color: #555;
+}
+
+.question-text {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.question-points {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-left: 1rem;
+}
+
+/* 通用徽章樣式 */
+.badge {
+  font-weight: 500;
+  padding: 0.5em 0.75em;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+  .property-name {
+    width: 150px;
+  }
+  
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+    margin-right: 0 !important;
+  }
+} 
