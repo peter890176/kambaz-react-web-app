@@ -1,0 +1,173 @@
+/* 測驗列表樣式 */
+.quiz-list-container {
+  margin-top: 20px;
+}
+
+/* 頁面標題樣式 */
+.quizzes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.quizzes-header h2 {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 測驗項目樣式 */
+.quiz-item {
+  border-left: 5px solid #f0f0f0;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
+}
+
+.quiz-item:hover {
+  border-left-color: #d63384;
+  background-color: #f9f9f9;
+}
+
+.quiz-item.published {
+  border-left-color: #198754;
+}
+
+.quiz-item.unpublished {
+  border-left-color: #dc3545;
+}
+
+/* 測驗狀態圖標 */
+.quiz-status-icon {
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.quiz-status-icon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.quiz-status-icon.published {
+  color: #198754;
+}
+
+.quiz-status-icon.unpublished {
+  color: #dc3545;
+}
+
+/* 測驗標題 */
+.quiz-title {
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.quiz-title:hover {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+/* 測驗詳情 */
+.quiz-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.quiz-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 上下文選單按鈕 */
+.quiz-actions .dropdown-toggle {
+  background: transparent;
+  border: none;
+  color: #666;
+  padding: 0.25rem 0.5rem;
+}
+
+.quiz-actions .dropdown-toggle:hover,
+.quiz-actions .dropdown-toggle:focus {
+  color: #333;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.quiz-actions .dropdown-toggle::after {
+  display: none;
+}
+
+/* 空狀態卡片 */
+.empty-state-card {
+  padding: 50px 20px;
+  text-align: center;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  color: #aaa;
+  margin-bottom: 15px;
+}
+
+/* 刪除確認對話框 */
+.delete-confirm-modal .modal-header {
+  border-bottom-color: #f8d7da;
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+/* 排序下拉菜單 */
+.sort-dropdown {
+  min-width: 180px;
+}
+
+/* 新增測驗按鈕 */
+.add-quiz-btn {
+  background-color: #d63384;
+  border-color: #d63384;
+}
+
+.add-quiz-btn:hover {
+  background-color: #c02a70;
+  border-color: #c02a70;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+  .quiz-details {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .quiz-item .row {
+    flex-direction: column;
+  }
+  
+  .quiz-item [class*="col-"] {
+    width: 100%;
+    text-align: left;
+    padding: 5px 15px;
+  }
+  
+  .quiz-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+} 
