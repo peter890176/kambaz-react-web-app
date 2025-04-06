@@ -1,0 +1,147 @@
+/* 測驗編輯器樣式 */
+.quiz-editor-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0;
+}
+
+/* 標題輸入框樣式 */
+.quiz-title-input {
+  font-size: 1.5rem;
+  font-weight: 500;
+  border: none;
+  padding: 0.5rem 0;
+  background-color: transparent;
+}
+
+.quiz-title-input:focus {
+  box-shadow: none;
+  border-color: transparent;
+  border-bottom: 2px solid #0d6efd;
+}
+
+/* 選項卡樣式 */
+.nav-tabs .nav-link {
+  color: #495057;
+  font-weight: 500;
+  border-radius: 0;
+  padding: 0.75rem 1rem;
+}
+
+.nav-tabs .nav-link.active {
+  font-weight: 600;
+  border-top: 3px solid #0d6efd;
+}
+
+/* 編輯器工具欄 */
+.editor-toolbar {
+  border: 1px solid #dee2e6;
+  border-bottom: none;
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 0.25rem 0.25rem 0 0;
+}
+
+/* 問題卡片樣式 */
+.question-card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border-radius: 0.5rem;
+  border: 1px solid #dee2e6;
+  transition: all 0.2s ease;
+}
+
+.question-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.question-card .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 0.75rem 1rem;
+}
+
+.question-number {
+  font-weight: 600;
+  color: #495057;
+  width: 30px;
+  text-align: center;
+  display: inline-block;
+}
+
+.question-title-input {
+  border: none;
+  background-color: transparent;
+  font-weight: 600;
+  flex-grow: 1;
+}
+
+.question-title-input:focus {
+  box-shadow: none;
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* 選項和答案區域 */
+.choices-section, .fill-blank-section {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+/* 操作按鈕 */
+.action-buttons .btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+}
+
+.action-buttons .btn svg {
+  margin-right: 0.5rem;
+}
+
+/* 表單元素樣式 */
+.form-check {
+  margin-bottom: 0.5rem;
+}
+
+.form-check-input {
+  cursor: pointer;
+}
+
+.form-check-label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+    margin-right: 0 !important;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+}
+
+/* 解決 TypeScript 錯誤的提示 */
+.ts-error-ignored {
+  display: none;
+} 
