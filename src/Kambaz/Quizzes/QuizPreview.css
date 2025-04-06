@@ -118,6 +118,36 @@
   margin-top: 0.25rem;
 }
 
+/* 嘗試歷史記錄模態框 */
+.attempts-history-modal .modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.attempts-history-modal .modal-title {
+  font-weight: 600;
+  color: #343a40;
+}
+
+.attempts-history-table {
+  margin-bottom: 0;
+}
+
+.attempts-history-table th {
+  font-weight: 600;
+  background-color: #f8f9fa;
+}
+
+.attempts-history-table .badge {
+  font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+}
+
+.attempts-history-table .btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
 /* 通用樣式 */
 .badge {
   font-weight: 500;
@@ -132,6 +162,22 @@
 
 .btn svg {
   margin-right: 0.5rem;
+}
+
+/* 警告提示樣式 */
+.attempts-limit-warning {
+  background-color: #fff3cd;
+  color: #856404;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.attempts-limit-warning svg {
+  margin-right: 0.5rem;
+  color: #856404;
 }
 
 /* 響應式調整 */
@@ -151,5 +197,13 @@
   
   .d-flex.justify-content-between .btn {
     width: 100%;
+  }
+  
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  .attempts-history-table {
+    font-size: 0.8rem;
   }
 } 
