@@ -1,0 +1,155 @@
+/* 測驗預覽頁面樣式 */
+.quiz-preview-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 測驗信息卡片 */
+.quiz-info-card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  margin-bottom: 2rem;
+}
+
+.quiz-info-card .card-header {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.quiz-description {
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.quiz-instructions {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid #0d6efd;
+  margin-top: 1rem;
+}
+
+.quiz-instructions h5 {
+  margin-bottom: 0.5rem;
+  color: #0d6efd;
+}
+
+.timer {
+  background-color: #f8f9fa;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  display: inline-block;
+}
+
+.timer strong {
+  color: #dc3545;
+}
+
+/* 問題卡片 */
+.question-card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  margin-bottom: 1.5rem;
+  border-radius: 0.5rem;
+}
+
+.question-card .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  padding: 1rem;
+}
+
+.question-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* 結果反饋 */
+.result-feedback {
+  background-color: #f8f9fa;
+  border-radius: 0.375rem;
+  margin-top: 1rem;
+}
+
+.correct-answer {
+  border-left: 4px solid #28a745 !important;
+  background-color: rgba(40, 167, 69, 0.05);
+}
+
+.incorrect-answer {
+  border-left: 4px solid #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+/* 結果卡片 */
+.results-card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.results-card .card-header {
+  font-weight: 600;
+}
+
+.question-summary .list-group-item {
+  padding: 0.75rem 1rem;
+  border-left-width: 4px;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.question-summary .list-group-item:hover {
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.075);
+}
+
+.question-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.question-type-badge {
+  display: inline-block;
+  margin-top: 0.25rem;
+}
+
+/* 通用樣式 */
+.badge {
+  font-weight: 500;
+  padding: 0.5em 0.75em;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+.btn svg {
+  margin-right: 0.5rem;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+  .quiz-info-card .card-body {
+    padding: 1rem;
+  }
+  
+  .timer {
+    margin-top: 1rem;
+  }
+  
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .d-flex.justify-content-between .btn {
+    width: 100%;
+  }
+} 
