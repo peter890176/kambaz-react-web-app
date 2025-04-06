@@ -142,7 +142,7 @@ function QuizEditor() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 構建測驗數據 - 後端將自動添加 creator 字段
+    // 構建測驗數據 - 明確包含 course 欄位
     const quizData = {
       title,
       description,
@@ -152,7 +152,8 @@ function QuizEditor() {
       multipleAttempts,
       attemptsAllowed,
       showCorrectAnswers,
-      questions
+      questions,
+      course: cid  // 明確添加課程ID
     };
     
     console.log("提交測驗表單", { cid, quizId, quizData });
