@@ -30,22 +30,9 @@ import {
   FaKey
 } from 'react-icons/fa';
 import './QuizEditor.css';
+import QuestionEditor, { Question } from './QuestionEditor';
 
 // 先創建一個簡化版本的編輯器，以後可以擴展功能
-
-interface Question {
-  _id?: string;
-  title: string;
-  questionType: string;
-  questionText: string;
-  points: number;
-  choices?: Array<{
-    text: string;
-    isCorrect: boolean;
-  }>;
-  correctAnswer?: boolean;
-  correctAnswers?: string[];
-}
 
 interface Quiz {
   _id: string;
@@ -164,7 +151,8 @@ function QuizEditor() {
       choices: [
         { text: '選項 1', isCorrect: false },
         { text: '選項 2', isCorrect: false }
-      ]
+      ],
+      isEditing: true  // 新問題默認為編輯模式
     };
     
     setQuestions([...questions, newQuestion]);
@@ -178,33 +166,9 @@ function QuizEditor() {
   };
 
   // 更新問題
-  const updateQuestion = (index: number, field: string, value: any) => {
+  const updateQuestion = (index: number, updatedQuestion: Question) => {
     const newQuestions = [...questions];
-    
-    // @ts-ignore: 動態屬性賦值
-    newQuestions[index][field] = value;
-    
-    // 處理問題類型變更
-    if (field === 'questionType') {
-      const question = newQuestions[index];
-      if (value === 'MULTIPLE_CHOICE') {
-        question.choices = [
-          { text: '選項 1', isCorrect: false },
-          { text: '選項 2', isCorrect: false }
-        ];
-        delete question.correctAnswer;
-        delete question.correctAnswers;
-      } else if (value === 'TRUE_FALSE') {
-        question.correctAnswer = false;
-        delete question.choices;
-        delete question.correctAnswers;
-      } else if (value === 'FILL_BLANK') {
-        question.correctAnswers = [''];
-        delete question.choices;
-        delete question.correctAnswer;
-      }
-    }
-    
+    newQuestions[index] = updatedQuestion;
     setQuestions(newQuestions);
   };
 
@@ -235,7 +199,11 @@ function QuizEditor() {
       dueDate: dueDate ? new Date(dueDate) : undefined,
       availableDate: availableDate ? new Date(availableDate) : undefined,
       untilDate: untilDate ? new Date(untilDate) : undefined,
-      questions,
+      questions: questions.map(q => {
+        // 刪除 isEditing 屬性，確保不會保存到數據庫
+        const { isEditing, ...questionData } = q;
+        return questionData;
+      }),
       course: cid
     };
     
@@ -243,15 +211,17 @@ function QuizEditor() {
       setLoading(true);
       setError(null);
       
-      let savedQuiz;
+      let savedQuiz: Quiz | undefined;
       
       if (quizId) {
         // 更新現有測驗
-        savedQuiz = await updateQuiz(quizId, quizData);
+        const response = await updateQuiz(quizId, quizData);
+        savedQuiz = response;
         setSuccess('測驗已成功更新');
       } else if (cid) {
         // 創建新測驗
-        savedQuiz = await createQuiz(cid, quizData);
+        const response = await createQuiz(cid, quizData);
+        savedQuiz = response;
         setSuccess('測驗已成功創建');
       }
       
@@ -653,191 +623,38 @@ function QuizEditor() {
             <Card>
               <Card.Body>
                 <div className="d-flex justify-content-between align-items-center mb-4">
-                  <h4 className="mb-0">測驗問題</h4>
+                  <div>
+                    <h4 className="mb-0">測驗問題</h4>
+                    <div className="text-muted">總分: {calculateTotalPoints()} 分</div>
+                  </div>
                   <Button 
                     variant="primary" 
                     onClick={addQuestion}
                     className="d-flex align-items-center"
                   >
-                    <FaPlus className="me-1" /> 添加問題
+                    <FaPlus className="me-1" /> 新增問題
                   </Button>
                 </div>
 
                 {questions.length === 0 ? (
-                  <Alert variant="info">
-                    此測驗尚無問題。點擊"添加問題"按鈕創建第一個問題。
-                  </Alert>
+                  <div className="text-center py-5">
+                    <div className="mb-3">
+                      <FaPlus style={{ fontSize: '3rem', opacity: 0.3 }} />
+                    </div>
+                    <h5>尚無問題</h5>
+                    <p className="text-muted">點擊「新增問題」按鈕創建第一個問題</p>
+                  </div>
                 ) : (
                   <div className="questions-list">
                     {questions.map((question, index) => (
-                      <Card key={index} className="mb-3 question-card">
-                        <Card.Header className="d-flex justify-content-between align-items-center">
-                          <div className="d-flex align-items-center">
-                            <span className="question-number me-2">{index + 1}.</span>
-                            <Form.Control
-                              type="text"
-                              value={question.title}
-                              onChange={(e) => updateQuestion(index, 'title', e.target.value)}
-                              className="question-title-input"
-                            />
-                          </div>
-                          <div>
-                            <Badge bg="primary" className="me-2">{question.points} 分</Badge>
-                            <Button 
-                              variant="outline-danger" 
-                              size="sm"
-                              onClick={() => removeQuestion(index)}
-                            >
-                              <FaTrash />
-                            </Button>
-                          </div>
-                        </Card.Header>
-                        <Card.Body>
-                          <Form.Group className="mb-3">
-                            <Form.Label>問題類型</Form.Label>
-                            <Form.Select
-                              value={question.questionType}
-                              onChange={(e) => updateQuestion(index, 'questionType', e.target.value)}
-                            >
-                              <option value="MULTIPLE_CHOICE">選擇題</option>
-                              <option value="TRUE_FALSE">是非題</option>
-                              <option value="FILL_BLANK">填空題</option>
-                            </Form.Select>
-                          </Form.Group>
-
-                          <Form.Group className="mb-3">
-                            <Form.Label>問題內容</Form.Label>
-                            <Form.Control
-                              as="textarea"
-                              rows={2}
-                              value={question.questionText}
-                              onChange={(e) => updateQuestion(index, 'questionText', e.target.value)}
-                            />
-                          </Form.Group>
-
-                          <Form.Group className="mb-3">
-                            <Form.Label>分數</Form.Label>
-                            <Form.Control
-                              type="number"
-                              min="0"
-                              value={question.points}
-                              onChange={(e) => updateQuestion(index, 'points', parseInt(e.target.value) || 0)}
-                            />
-                          </Form.Group>
-
-                          {/* 根據問題類型顯示不同的答案設置 */}
-                          {question.questionType === 'MULTIPLE_CHOICE' && question.choices && (
-                            <div className="choices-section">
-                              <Form.Label>選項</Form.Label>
-                              {question.choices.map((choice, choiceIndex) => (
-                                <InputGroup key={choiceIndex} className="mb-2">
-                                  <InputGroup.Checkbox
-                                    checked={choice.isCorrect}
-                                    onChange={() => {
-                                      const newChoices = [...question.choices!];
-                                      newChoices[choiceIndex].isCorrect = !newChoices[choiceIndex].isCorrect;
-                                      updateQuestion(index, 'choices', newChoices);
-                                    }}
-                                  />
-                                  <Form.Control
-                                    value={choice.text}
-                                    onChange={(e) => {
-                                      const newChoices = [...question.choices!];
-                                      newChoices[choiceIndex].text = e.target.value;
-                                      updateQuestion(index, 'choices', newChoices);
-                                    }}
-                                  />
-                                  <Button 
-                                    variant="outline-danger"
-                                    onClick={() => {
-                                      const newChoices = [...question.choices!];
-                                      newChoices.splice(choiceIndex, 1);
-                                      updateQuestion(index, 'choices', newChoices);
-                                    }}
-                                  >
-                                    <FaTrash />
-                                  </Button>
-                                </InputGroup>
-                              ))}
-                              <Button
-                                variant="outline-secondary"
-                                size="sm"
-                                onClick={() => {
-                                  const newChoices = [...question.choices!];
-                                  newChoices.push({ text: `選項 ${newChoices.length + 1}`, isCorrect: false });
-                                  updateQuestion(index, 'choices', newChoices);
-                                }}
-                              >
-                                <FaPlus className="me-1" /> 添加選項
-                              </Button>
-                            </div>
-                          )}
-
-                          {question.questionType === 'TRUE_FALSE' && (
-                            <Form.Group>
-                              <Form.Label>正確答案</Form.Label>
-                              <div>
-                                <Form.Check
-                                  inline
-                                  type="radio"
-                                  id={`true-${index}`}
-                                  label="是"
-                                  checked={question.correctAnswer === true}
-                                  onChange={() => updateQuestion(index, 'correctAnswer', true)}
-                                />
-                                <Form.Check
-                                  inline
-                                  type="radio"
-                                  id={`false-${index}`}
-                                  label="否"
-                                  checked={question.correctAnswer === false}
-                                  onChange={() => updateQuestion(index, 'correctAnswer', false)}
-                                />
-                              </div>
-                            </Form.Group>
-                          )}
-
-                          {question.questionType === 'FILL_BLANK' && question.correctAnswers && (
-                            <div className="fill-blank-section">
-                              <Form.Label>正確答案 (可接受多個答案)</Form.Label>
-                              {question.correctAnswers.map((answer, answerIndex) => (
-                                <InputGroup key={answerIndex} className="mb-2">
-                                  <Form.Control
-                                    value={answer}
-                                    onChange={(e) => {
-                                      const newAnswers = [...question.correctAnswers!];
-                                      newAnswers[answerIndex] = e.target.value;
-                                      updateQuestion(index, 'correctAnswers', newAnswers);
-                                    }}
-                                    placeholder="輸入可接受的答案"
-                                  />
-                                  <Button 
-                                    variant="outline-danger"
-                                    onClick={() => {
-                                      const newAnswers = [...question.correctAnswers!];
-                                      newAnswers.splice(answerIndex, 1);
-                                      updateQuestion(index, 'correctAnswers', newAnswers);
-                                    }}
-                                  >
-                                    <FaTrash />
-                                  </Button>
-                                </InputGroup>
-                              ))}
-                              <Button
-                                variant="outline-secondary"
-                                size="sm"
-                                onClick={() => {
-                                  const newAnswers = [...question.correctAnswers!];
-                                  newAnswers.push('');
-                                  updateQuestion(index, 'correctAnswers', newAnswers);
-                                }}
-                              >
-                                <FaPlus className="me-1" /> 添加可接受答案
-                              </Button>
-                            </div>
-                          )}
-                        </Card.Body>
-                      </Card>
+                      <QuestionEditor
+                        key={question._id || index}
+                        question={question}
+                        index={index}
+                        onUpdate={updateQuestion}
+                        onRemove={removeQuestion}
+                        isNew={!question._id}
+                      />
                     ))}
                   </div>
                 )}
