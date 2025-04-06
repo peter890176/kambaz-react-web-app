@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Form, Button, Container, Card, Row, Col, Alert } from 'react-bootstrap';
-import { createQuiz, getQuizById, updateQuiz } from './api';
+import { createQuiz, getQuizById, updateQuiz, publishQuiz } from './api';
 import { FaSave, FaArrowLeft, FaPlus, FaTrash } from 'react-icons/fa';
 
 // 先創建一個簡化版本的編輯器，以後可以擴展功能
@@ -178,13 +178,32 @@ function QuizEditor() {
         // 創建新測驗
         const newQuiz = await createQuiz(cid, quizData);
         console.log("測驗創建成功", newQuiz);
-        setSuccess('測驗已成功創建');
         
-        // 重定向到新測驗
+        try {
+          // 自動發布測驗
+          const publishedQuiz = await publishQuiz(newQuiz._id);
+          console.log("測驗自動發布成功", publishedQuiz);
+          setSuccess('測驗已成功創建並發布');
+        } catch (pubErr) {
+          console.error("測驗自動發布失敗", pubErr);
+          setSuccess('測驗已成功創建，但自動發布失敗');
+        }
+        
+        // 重定向到測驗列表頁面
         setTimeout(() => {
-          const path = `/Kambaz/Quizzes/${newQuiz._id}`;
+          // 使用課程測驗列表頁面，而非測驗詳情頁
+          const path = `/Kambaz/Courses/${cid}/Quizzes`;
           console.log("即將導航到:", path);
-          navigate(path);
+          
+          // 使用window.location.href強制頁面刷新，確保測驗列表重新載入
+          window.location.href = `#${path}`;
+          // 添加一個小延遲後再刷新頁面，確保路由已經改變
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
+          
+          // 不使用navigate以避免React Router的緩存問題
+          // navigate(path);
         }, 1500);
       }
     } catch (err: any) {

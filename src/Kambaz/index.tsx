@@ -118,11 +118,12 @@ export default function Kambaz() {
             <Route path="Inbox" element={<h1>Inbox</h1>} />
             <Route path="Courses/:cid/Quizzes/new" element={<QuizEditor />} />
             <Route path="Courses/:cid/Quizzes" element={<QuizzesList />} />
-            <Route path="courses/:courseId/quizzes" element={<QuizzesList />} />
             <Route path="Quizzes/:quizId/edit" element={<QuizEditor />} />
             <Route path="Quizzes/:quizId" element={<QuizDetails />} />
             <Route path="Quizzes/:quizId/attempt" element={<QuizAttempt />} />
             <Route path="Attempts/:attemptId/results" element={<QuizResults />} />
+            <Route path="Quizzes" element={<Navigate to="/Kambaz/Dashboard" />} />
+            <Route path="Courses" element={<Navigate to="/Kambaz/Dashboard" />} />
           </Routes>
         </div>
       </div>

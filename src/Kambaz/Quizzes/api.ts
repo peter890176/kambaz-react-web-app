@@ -1,8 +1,37 @@
 import axios from "axios";
 
 // 從環境變數獲取服務器地址
-const REMOTE_SERVER = import.meta.env.VITE_REMOTE_SERVER;
+const REMOTE_SERVER = import.meta.env.VITE_REMOTE_SERVER || 'http://localhost:4000';
 const API_BASE = `${REMOTE_SERVER}/api`;
+
+// 添加全局錯誤處理和日誌記錄
+axios.interceptors.request.use(
+  config => {
+    console.log(`發出請求: ${config.method?.toUpperCase()} ${config.url}`, config);
+    return config;
+  },
+  error => {
+    console.error('請求攔截器錯誤:', error);
+    return Promise.reject(error);
+  }
+);
+
+axios.interceptors.response.use(
+  response => {
+    console.log(`收到響應: ${response.status} ${response.config.url}`, response.data);
+    return response;
+  },
+  error => {
+    if (error.response) {
+      console.error(`請求失敗: ${error.response.status} ${error.config?.url}`, error.response.data);
+    } else if (error.request) {
+      console.error('未收到響應:', error.request);
+    } else {
+      console.error('請求錯誤:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // 創建具有認證功能的 axios 實例
 const axiosWithCredentials = axios.create({ 
@@ -10,13 +39,58 @@ const axiosWithCredentials = axios.create({
   withCredentials: true 
 });
 
-// 獲取課程中的測驗列表
+// 獲取當前用戶會話信息
+export const getCurrentUserSession = async () => {
+  try {
+    console.log("正在獲取當前用戶會話信息");
+    // 改用公共的API_BASE
+    
+    const response = await axiosWithCredentials.get(`/users/me`);
+    
+    console.log("獲取用戶會話成功:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("獲取用戶會話失敗:", error);
+    if (error.response) {
+      return { error: true, status: error.response.status, message: error.response.data?.message || "獲取會話失敗" };
+    }
+    return { error: true, message: error.message || "未知錯誤" };
+  }
+};
+
+// 獲取課程中的測驗列表 - 添加詳細日誌
 export const getQuizzesForCourse = async (courseId: string) => {
   try {
+    console.log(`正在獲取課程 ${courseId} 的測驗列表`);
+    console.log(`API URL: ${API_BASE}/courses/${courseId}/quizzes`);
+    
+    // 添加請求開始時間戳
+    const startTime = new Date().getTime();
     const response = await axiosWithCredentials.get(`/courses/${courseId}/quizzes`);
+    
+    // 計算請求時間
+    const endTime = new Date().getTime();
+    const requestTime = endTime - startTime;
+    
+    console.log(`測驗列表獲取成功，耗時: ${requestTime}ms`);
+    console.log("獲取到的測驗數據:", response.data);
+    
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error("獲取測驗列表失敗:", error);
+    
+    // 添加詳細錯誤信息
+    if (error.response) {
+      console.error("服務器返回錯誤:", {
+        status: error.response.status,
+        data: error.response.data
+      });
+    } else if (error.request) {
+      console.error("請求已發送但沒有收到響應");
+    } else {
+      console.error("請求設置出錯:", error.message);
+    }
+    
     throw error;
   }
 };
