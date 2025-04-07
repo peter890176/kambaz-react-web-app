@@ -168,8 +168,17 @@ export const unpublishQuiz = async (quizId: string) => {
 // 創建測驗嘗試
 export const createAttempt = async (quizId: string) => {
   try {
+    console.log(`嘗試創建測驗(${quizId})的嘗試記錄`);
     const response = await axiosWithCredentials.post(`/quizzes/${quizId}/attempts`);
-    return response.data;
+    
+    // 檢查返回的數據是否有效
+    if (!response || !response.data) {
+      console.error("伺服器返回的數據無效:", response);
+      throw new Error("伺服器返回的嘗試數據無效");
+    }
+    
+    console.log("創建測驗嘗試成功:", response.data);
+    return response; // 返回整個 response 對象，包含 data 屬性
   } catch (error) {
     console.error("創建測驗嘗試失敗:", error);
     throw error;

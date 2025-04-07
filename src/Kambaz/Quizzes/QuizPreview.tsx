@@ -176,8 +176,8 @@ const QuizPreview: React.FC = () => {
         if (!attemptLimitReached && !isViewingAttempt && !showResults) {
           try {
             const attemptResponse = await createAttempt(quizId);
-            setAttempt(attemptResponse);
-            setStartTime(new Date(attemptResponse.startTime));
+            setAttempt(attemptResponse.data);
+            setStartTime(new Date(attemptResponse.data.startTime));
           } catch (attemptErr: any) {
             if (attemptErr.response && attemptErr.response.status === 400 && 
                 attemptErr.response.data.message === "已達到嘗試次數上限") {
@@ -399,8 +399,8 @@ const QuizPreview: React.FC = () => {
       
       try {
         const attemptResponse = await createAttempt(quizId);
-        setAttempt(attemptResponse);
-        setStartTime(new Date(attemptResponse.startTime));
+        setAttempt(attemptResponse.data);
+        setStartTime(new Date(attemptResponse.data.startTime));
       } catch (err: any) {
         if (err.response && err.response.status === 400 && 
             err.response.data.message === "已達到嘗試次數上限") {

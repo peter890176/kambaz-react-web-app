@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getQuizById, publishQuiz, unpublishQuiz, createAttempt } from './api';
+import { getQuizById, publishQuiz, unpublishQuiz, createAttempt, getAttemptsForQuiz } from './api';
 import { Container, Button, Card, Badge, ListGroup, Alert, Row, Col, Table } from 'react-bootstrap';
-import { FaEdit, FaPlay, FaEye, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaLock } from 'react-icons/fa';
+import { FaEdit, FaPlay, FaEye, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaLock, FaHistory } from 'react-icons/fa';
 import './QuizDetails.css';
+import { useSelector } from 'react-redux';
 
 interface Quiz {
   _id: string;
@@ -37,36 +38,55 @@ interface Quiz {
 function QuizDetails() {
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const { currentUser } = useSelector((state: any) => state.accountReducer);
+  
+  const [quiz, setQuiz] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [lastAttempt, setLastAttempt] = useState<any | null>(null);
+  const [hasCompletedAttempt, setHasCompletedAttempt] = useState(false);
+  
+  // 確定當前用戶身份
+  const isTeacher = currentUser && currentUser.role === 'FACULTY';
+  const isStudent = currentUser && currentUser.role === 'STUDENT';
 
   useEffect(() => {
-    // 從會話存儲中獲取當前用戶
-    const currentUser = sessionStorage.getItem('currentUser');
-    if (currentUser) {
-      setUser(JSON.parse(currentUser));
-    }
-
     if (!quizId) return;
-
-    const fetchQuiz = async () => {
+    
+    const fetchData = async () => {
       try {
         setLoading(true);
+        
+        // 獲取測驗詳情
         const response = await getQuizById(quizId);
         setQuiz(response.data);
-        setError(null);
+        
+        if (isStudent) {
+          // 獲取學生的測驗嘗試記錄
+          try {
+            const attemptsData = await getAttemptsForQuiz(quizId);
+            if (Array.isArray(attemptsData) && attemptsData.length > 0) {
+              // 獲取最新的嘗試
+              const latestAttempt = attemptsData[0]; // 已經按創建時間排序
+              setLastAttempt(latestAttempt);
+              
+              if (latestAttempt.completed) {
+                setHasCompletedAttempt(true);
+              }
+            }
+          } catch (err: any) {
+            console.error("獲取測驗嘗試記錄失敗:", err);
+          }
+        }
       } catch (err: any) {
-        setError(err.message || '獲取測驗詳情失敗');
-        console.error('獲取測驗詳情出錯:', err);
+        setError(err.message || "獲取測驗詳情失敗");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchQuiz();
-  }, [quizId]);
+    
+    fetchData();
+  }, [quizId, isStudent]);
 
   const handleEditQuiz = () => {
     navigate(`/Kambaz/Quizzes/${quizId}/edit`);
@@ -94,12 +114,35 @@ function QuizDetails() {
     if (!quiz) return;
     
     try {
+      console.log(`嘗試開始測驗: ${quiz._id}`);
       const response = await createAttempt(quiz._id);
+      
+      // 確保 response 和 response.data 存在且有效
+      if (!response || !response.data) {
+        throw new Error("收到無效的嘗試記錄響應");
+      }
+      
+      console.log(`創建測驗嘗試成功，準備進入嘗試頁面，嘗試ID=${response.data._id}`);
       navigate(`/Kambaz/Quizzes/${quiz._id}/attempt`, { 
         state: { attemptId: response.data._id } 
       });
     } catch (err: any) {
-      setError(`開始測驗失敗: ${err.message}`);
+      console.error("開始測驗出錯:", err);
+      const errorMessage = err.response?.data?.message || err.message || "未知錯誤";
+      setError(`開始測驗失敗: ${errorMessage}`);
+    }
+  };
+
+  // 新增查看最近嘗試結果的函數
+  const handleViewResults = () => {
+    if (lastAttempt && lastAttempt._id) {
+      navigate(`/Kambaz/Quizzes/${quizId}/results`, {
+        state: {
+          attemptId: lastAttempt._id,
+          score: lastAttempt.score,
+          totalPoints: quiz?.totalPoints
+        }
+      });
     }
   };
 
@@ -137,9 +180,6 @@ function QuizDetails() {
     </Container>
   );
 
-  const isTeacher = user && user.role === 'FACULTY';
-  const isStudent = !isTeacher;
-
   const getQuizTypeLabel = (type: string) => {
     switch (type) {
       case 'GRADED_QUIZ': return '計分測驗';
@@ -163,33 +203,46 @@ function QuizDetails() {
   return (
     <Container className="my-4 quiz-details-container">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="page-title">{quiz.title}</h2>
+        <h2 className="page-title">{quiz?.title}</h2>
         <div className="action-buttons">
           {isTeacher && (
             <>
               <Button 
                 variant="outline-secondary" 
                 className="me-2"
-                onClick={handlePreviewQuiz}
+                onClick={() => navigate(`/Kambaz/Quizzes/${quizId}/preview`)}
               >
                 <FaEye className="me-1" /> 預覽
               </Button>
               <Button 
                 variant="outline-primary" 
                 className="me-2"
-                onClick={handleEditQuiz}
+                onClick={() => navigate(`/Kambaz/Quizzes/${quizId}/edit`)}
               >
                 <FaEdit className="me-1" /> 編輯
               </Button>
             </>
           )}
-          {isStudent && quiz.published && (
-            <Button 
-              variant="success" 
-              onClick={handleStartQuiz}
-            >
-              <FaPlay className="me-1" /> 開始測驗
-            </Button>
+          {isStudent && quiz?.published && (
+            <>
+              <Button 
+                variant="success" 
+                className="me-2"
+                onClick={handleStartQuiz}
+                disabled={quiz?.multipleAttempts === false && hasCompletedAttempt}
+              >
+                <FaPlay className="me-1" /> 開始測驗
+              </Button>
+              
+              {hasCompletedAttempt && (
+                <Button 
+                  variant="primary" 
+                  onClick={handleViewResults}
+                >
+                  <FaHistory className="me-1" /> 查看結果
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -201,10 +254,10 @@ function QuizDetails() {
               <Badge bg={quiz.published ? "success" : "secondary"} className="me-2">
                 {quiz.published ? "已發布" : "未發布"}
               </Badge>
-              <Badge bg="info">{getQuizTypeLabel(quiz.quizType)}</Badge>
+              <Badge bg="info">{getQuizTypeLabel(quiz.quizType || 'GRADED_QUIZ')}</Badge>
             </div>
             <div>
-              <Badge bg="primary">{quiz.totalPoints} 分</Badge>
+              <Badge bg="primary">{quiz.totalPoints || 0} 分</Badge>
             </div>
           </div>
         </Card.Header>
@@ -319,7 +372,7 @@ function QuizDetails() {
               <Alert variant="warning">此測驗尚無問題</Alert>
             ) : (
               <ListGroup className="question-list">
-                {quiz.questions.map((question, index) => (
+                {quiz.questions.map((question: Quiz['questions'][0], index: number) => (
                   <ListGroup.Item key={question._id} className="question-item">
                     <div className="d-flex justify-content-between">
                       <div>
