@@ -69,7 +69,17 @@ function QuizzesList() {
   useEffect(() => {
     if (currentUser && currentUser.role) {
       console.log("Current user role:", currentUser.role);
-      setUserRole(currentUser.role === 'STUDENT' ? 'student' : 'instructor');
+      // Map FACULTY role to 'instructor' and STUDENT role to 'student'
+      if (currentUser.role === 'FACULTY') {
+        setUserRole('instructor');
+      } else if (currentUser.role === 'STUDENT') {
+        setUserRole('student');
+      } else if (currentUser.role === 'INSTRUCTOR') {
+        setUserRole('instructor');
+      } else {
+        // Default to student for any other role
+        setUserRole('student');
+      }
     }
   }, [currentUser]);
 
@@ -268,6 +278,31 @@ function QuizzesList() {
     </Card>
   );
 
+  // Function to check if a user can modify a quiz
+  const canModifyQuiz = () => {
+    return userRole === 'instructor'; // Only instructors/faculty can modify quizzes
+  }
+
+  // Function to check if a quiz is available for students to take
+  const isQuizAvailable = (quiz: Quiz) => {
+    if (userRole === 'instructor') return true; // Instructors see all quizzes
+    
+    // For students, check if quiz is published and within available dates
+    if (!quiz.published) return false;
+    
+    const now = new Date();
+    const availableDate = quiz.availableDate ? new Date(quiz.availableDate) : null;
+    const untilDate = quiz.untilDate ? new Date(quiz.untilDate) : null;
+    
+    // Not available yet
+    if (availableDate && now < availableDate) return false;
+    
+    // Already closed
+    if (untilDate && now > untilDate) return false;
+    
+    return true;
+  };
+
   if (loading && quizzes.length === 0) {
     return (
       <Container className="text-center my-5">
@@ -296,8 +331,7 @@ function QuizzesList() {
               <Dropdown.Item onClick={() => handleSort('availableDate')}>Available Date</Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
-          {userRole === 'instructor' && (
-            
+          {canModifyQuiz() && (
             <Button 
               variant="danger" 
               onClick={handleCreateQuiz}
@@ -325,6 +359,9 @@ function QuizzesList() {
         <ListGroup>
           {quizzes.map(quiz => {
             const availabilityInfo = getAvailabilityStatus(quiz);
+            // Skip quizzes that aren't available for students
+            if (userRole === 'student' && !isQuizAvailable(quiz)) return null;
+            
             return (
               <ListGroup.Item key={quiz._id} className={`p-0 mb-2 border quiz-item ${quiz.published ? 'published' : 'unpublished'}`}>
                 <Row className="m-0 p-0 align-items-center">
@@ -391,6 +428,31 @@ function QuizzesList() {
                           <Dropdown.Item onClick={() => handleCopyQuiz(quiz._id)}>Copy to another course</Dropdown.Item>
                         </Dropdown.Menu>
                       </Dropdown>
+                    </Col>
+                  )}
+
+                  {/* Student-specific actions */}
+                  {userRole === 'student' && (
+                    <Col xs={3} className="d-flex justify-content-end py-3 pe-3 quiz-actions">
+                      {/* Show Take Quiz button if attempt is allowed */}
+                      {!studentAttempts[quiz._id] && (
+                        <Button 
+                          variant="success"
+                          onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizzes/${quiz._id}/attempt`)}
+                        >
+                          Take Quiz
+                        </Button>
+                      )}
+                      
+                      {/* If student has completed the quiz, show their score and a View Results button */}
+                      {studentAttempts[quiz._id] && studentAttempts[quiz._id].completed && (
+                        <Button 
+                          variant="info"
+                          onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizzes/${quiz._id}/results`)}
+                        >
+                          View Results
+                        </Button>
+                      )}
                     </Col>
                   )}
                 </Row>

@@ -37,6 +37,7 @@ export default function Dashboard({
   });
 
   const isFaculty = currentUser.role === "FACULTY";
+  const isStudent = currentUser.role === "STUDENT";
   const isTA = currentUser.role === "TA";
   const isAdmin = currentUser.role === "ADMIN";
 
@@ -50,6 +51,11 @@ export default function Dashboard({
         enrollment.user === currentUser._id &&
         enrollment.course === courseId
     );
+  };
+
+  // For faculty members, check if they created the course
+  const isCreatedByCurrent = (course: any) => {
+    return course.createdBy === currentUser._id;
   };
 
   const handleEnrollClick = (courseId: string, e: React.MouseEvent) => {
@@ -113,9 +119,34 @@ export default function Dashboard({
     navigate(`/Kambaz/Courses/${courseId}/Home`);
   };
 
-  const displayedCourses = (showAllCourses || isAdmin || isTA || isFaculty)
-    ? reduxCourses
-    : reduxCourses.filter((course: any) => isEnrolled(course._id));
+  // Determine which courses to display based on role
+  const displayedCourses = (() => {
+    // Admin and TA see all courses
+    if (isAdmin || isTA) {
+      return reduxCourses;
+    }
+    
+    // Faculty see all courses they created plus any they're enrolled in
+    if (isFaculty) {
+      if (showAllCourses) {
+        return reduxCourses;
+      }
+      return reduxCourses.filter((course: any) => 
+        isCreatedByCurrent(course) || isEnrolled(course._id)
+      );
+    }
+    
+    // Students see courses based on enrollment status
+    if (isStudent) {
+      if (showAllCourses) {
+        return reduxCourses;
+      }
+      return reduxCourses.filter((course: any) => isEnrolled(course._id));
+    }
+    
+    // Default - show all courses
+    return reduxCourses;
+  })();
 
   useEffect(() => {
     if (selectedCourse) {
@@ -164,8 +195,13 @@ export default function Dashboard({
     <div id="wd-dashboard">
       <h1 id="wd-dashboard-title">
         Dashboard
-        <button onClick={() => dispatch(toggleShowAllCourses())} className="float-end btn btn-primary" >
-          {showAllCourses ? "My Courses" : "All Courses"}
+        <button 
+          onClick={() => dispatch(toggleShowAllCourses())} 
+          className="float-end btn btn-primary" 
+        >
+          {showAllCourses ? 
+            (isStudent ? "My Enrolled Courses" : "My Courses") : 
+            (isStudent ? "Available Courses" : "All Courses")}
         </button>
       </h1> <hr />
       {isFaculty && (
@@ -175,7 +211,11 @@ export default function Dashboard({
                     id="wd-add-new-course-click"
                     onClick={() => {
                       const newCourseId = uuidv4();
-                      const newCourseData = { ...newCourse, _id: newCourseId };
+                      const newCourseData = { 
+                        ...newCourse, 
+                        _id: newCourseId,
+                        createdBy: currentUser._id 
+                      };
                       dispatch(addCourse(newCourseData));
                       dispatch(enrollInCourse({ userId: currentUser._id, courseId: newCourseId }));
                     }} > Add </button>
@@ -199,18 +239,26 @@ export default function Dashboard({
       )}
 
       <div className="d-flex justify-content-between align-items-center">
-        <h2 id="wd-dashboard-published">Published Courses ({displayedCourses.length})</h2>
-        {/*{(isStudent || isAdmin ) && (
-          <Button
-            variant="primary"
-            onClick={() => dispatch(toggleShowAllCourses())}
-            className="mb-3"
-          >
-            {showAllCourses ? "Show My Courses" : "Show All Courses"}
-          </Button>
-        )}*/}
+        <h2 id="wd-dashboard-published">
+          {showAllCourses ? 
+            (isStudent ? "Available Courses" : "All Courses") : 
+            (isStudent ? "My Enrolled Courses" : "My Courses")}
+          ({displayedCourses.length})
+        </h2>
       </div>
       <hr />
+
+      {isStudent && displayedCourses.length === 0 && !showAllCourses && (
+        <div className="alert alert-info">
+          <p>You're not enrolled in any courses yet.</p>
+          <button 
+            className="btn btn-primary"
+            onClick={() => dispatch(toggleShowAllCourses())}
+          >
+            Browse Available Courses
+          </button>
+        </div>
+      )}
 
       <div id="wd-dashboard-courses">
         <Row xs={1} md={5} className="g-4">
@@ -238,7 +286,9 @@ export default function Dashboard({
                     >
                       Go
                     </Button>
-                    {isFaculty && (
+                    
+                    {/* Faculty can edit and delete courses they created */}
+                    {isFaculty && isCreatedByCurrent(course) && (
                       <>
                         <button onClick={(e) => {
                           e.preventDefault();
@@ -254,7 +304,24 @@ export default function Dashboard({
                         </button>
                       </>
                     )}
-                    {enrolling && (
+                    
+                    {/* Students can enroll/unenroll from courses */}
+                    {isStudent && (
+                      <button 
+                        className={`btn ${isEnrolled(course._id) ? "btn-danger" : "btn-success"} float-end`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          isEnrolled(course._id) 
+                            ? handleUnenrollClick(course._id, e) 
+                            : handleEnrollClick(course._id, e);
+                        }}
+                      >
+                        {isEnrolled(course._id) ? "Unenroll" : "Enroll"}
+                      </button>
+                    )}
+                    
+                    {/* Option for Admin/TA to enroll/unenroll */}
+                    {(isAdmin || isTA) && (
                       <button 
                         className={`btn ${isEnrolled(course._id) ? "btn-danger" : "btn-success"} float-end`}
                         onClick={(e) => {

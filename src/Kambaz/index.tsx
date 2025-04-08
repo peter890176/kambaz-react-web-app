@@ -134,16 +134,56 @@ export default function Kambaz() {
             } />
             <Route path="Calendar" element={<h1>Calendar</h1>} />
             <Route path="Inbox" element={<h1>Inbox</h1>} />
-            <Route path="Courses/:cid/Quizzes/new" element={<QuizEditor />} />
+            
+            {/* Faculty-only routes */}
+            <Route path="Courses/:cid/Quizzes/new" element={
+              <ProtectedRoute requiredRoles={['FACULTY', 'INSTRUCTOR']}>
+                <QuizEditor />
+              </ProtectedRoute>
+            } />
+            
             <Route path="Courses/:cid/Quizzes" element={<QuizzesList />} />
-            <Route path="Quizzes/:quizId/edit" element={<QuizEditor />} />
+            
+            <Route path="Quizzes/:quizId/edit" element={
+              <ProtectedRoute requiredRoles={['FACULTY', 'INSTRUCTOR']}>
+                <QuizEditor />
+              </ProtectedRoute>
+            } />
+            
             <Route path="Quizzes/:quizId" element={<QuizDetails />} />
             <Route path="Courses/:cid/Quizzes/:quizId" element={<QuizDetailsWrapper />} />
-            <Route path="Quizzes/:quizId/attempt" element={<QuizAttempt />} />
-            <Route path="Courses/:cid/Quizzes/:quizId/attempt" element={<QuizAttemptWrapper />} />
-            <Route path="Quizzes/:quizId/results" element={<QuizResults />} />
-            <Route path="Courses/:cid/Quizzes/:quizId/results" element={<QuizResultsWrapper />} />
-            <Route path="Quizzes/:quizId/preview" element={<QuizPreview />} />
+            
+            {/* Student and Faculty routes */}
+            <Route path="Quizzes/:quizId/attempt" element={
+              <ProtectedRoute>
+                <QuizAttempt />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="Courses/:cid/Quizzes/:quizId/attempt" element={
+              <ProtectedRoute>
+                <QuizAttemptWrapper />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="Quizzes/:quizId/results" element={
+              <ProtectedRoute>
+                <QuizResults />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="Courses/:cid/Quizzes/:quizId/results" element={
+              <ProtectedRoute>
+                <QuizResultsWrapper />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="Quizzes/:quizId/preview" element={
+              <ProtectedRoute requiredRoles={['FACULTY', 'INSTRUCTOR']}>
+                <QuizPreview />
+              </ProtectedRoute>
+            } />
+            
             <Route path="Quizzes" element={<Navigate to="/Kambaz/Dashboard" />} />
             <Route path="Courses" element={<Navigate to="/Kambaz/Dashboard" />} />
           </Routes>
