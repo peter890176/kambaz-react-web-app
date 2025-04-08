@@ -53,6 +53,7 @@ interface Quiz {
   availableDate?: Date;
   untilDate?: Date;
   questions: Question[];
+  course?: string;
 }
 
 function QuizEditor() {
@@ -62,6 +63,7 @@ function QuizEditor() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('details');
+  const [courserId, setCourserId] = useState<string | undefined>(cid);
   
   // Quiz basic information
   const [title, setTitle] = useState('Untitled Quiz');
@@ -92,6 +94,14 @@ function QuizEditor() {
           setLoading(true);
           const response = await getQuizById(quizId);
           const quiz = response.data;
+          
+          // Record the course ID if it exists in the quiz data
+          console.log("Loaded quiz data:", quiz);
+          if (quiz.course && !cid) {
+            console.log("Quiz belongs to course:", quiz.course);
+            // Save course ID to state variable
+            setCourserId(quiz.course);
+          }
           
           // Fill the form
           setTitle(quiz.title || 'Untitled Quiz');
@@ -231,9 +241,19 @@ function QuizEditor() {
           await publishQuiz(savedQuiz._id);
           setSuccess(prevSuccess => `${prevSuccess} and published`);
           
-          // Navigate to quiz list page
+          // Get course ID from the saved quiz data
           setTimeout(() => {
-            navigate(`/Kambaz/Courses/${cid}/Quizzes`);
+            // Use the course ID from the saved quiz (if exists)
+            if (savedQuiz.course) {
+              navigate(`/Kambaz/Courses/${savedQuiz.course}/Quizzes`);
+            } else if (courserId) {
+              navigate(`/Kambaz/Courses/${courserId}/Quizzes`);
+            } else if (cid) {
+              navigate(`/Kambaz/Courses/${cid}/Quizzes`);
+            } else {
+              // If no course ID is available, navigate to quiz details page
+              navigate(`/Kambaz/Quizzes/${savedQuiz._id}`);
+            }
           }, 1000);
         } catch (pubErr) {
           console.error("Failed to publish quiz", pubErr);
@@ -265,10 +285,14 @@ function QuizEditor() {
 
   // Cancel editing
   const handleCancel = () => {
-    if (cid) {
+    if (courserId) {
+      navigate(`/Kambaz/Courses/${courserId}/Quizzes`);
+    } else if (cid) {
       navigate(`/Kambaz/Courses/${cid}/Quizzes`);
     } else if (quizId) {
       navigate(`/Kambaz/Quizzes/${quizId}`);
+    } else {
+      navigate('/Kambaz/Dashboard');
     }
   };
 

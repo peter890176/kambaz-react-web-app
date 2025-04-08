@@ -107,7 +107,11 @@ function QuizzesList() {
 
   // Navigate to quiz details page
   const handleViewQuiz = (quizId: string) => {
-    navigate(`/Kambaz/Quizzes/${quizId}`);
+    if (cid) {
+      navigate(`/Kambaz/Courses/${cid}/Quizzes/${quizId}`);
+    } else {
+      navigate(`/Kambaz/Quizzes/${quizId}`);
+    }
   };
 
   // Navigate to quiz edit page

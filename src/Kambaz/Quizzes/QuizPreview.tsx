@@ -1074,15 +1074,6 @@ const QuizPreview: React.FC = () => {
         </div>
       )}
       
-      {/* Debug info in dev mode */}
-      {import.meta.env.DEV && (
-        <div className="mt-4 p-3 border border-info rounded bg-light">
-          <h5>Debug Info:</h5>
-          <div>Preview Mode: {isPreviewMode ? "Yes" : "No"}</div>
-          <div>Questions: {quiz ? quiz.questions.length : 0}</div>
-          <div>Attempt ID: {attempt ? attempt._id : "No attempt"}</div>
-        </div>
-      )}
     </Container>
   );
 };

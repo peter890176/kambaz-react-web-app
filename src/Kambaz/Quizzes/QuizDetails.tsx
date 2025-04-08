@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getQuizById, publishQuiz, unpublishQuiz, createAttempt, getAttemptsForQuiz } from './api';
 import { Container, Button, Card, Badge, ListGroup, Alert, Row, Col, Table } from 'react-bootstrap';
-import { FaEdit, FaPlay, FaEye, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaLock, FaHistory } from 'react-icons/fa';
+import { FaEdit, FaPlay, FaEye, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaLock, FaHistory, FaArrowLeft } from 'react-icons/fa';
 import './QuizDetails.css';
 import { useSelector } from 'react-redux';
 
@@ -35,7 +35,11 @@ interface Quiz {
   }>;
 }
 
-function QuizDetails() {
+interface QuizDetailsProps {
+  courseId?: string;
+}
+
+function QuizDetails({ courseId }: QuizDetailsProps) {
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
   const { currentUser } = useSelector((state: any) => state.accountReducer);
@@ -59,7 +63,13 @@ function QuizDetails() {
         
         // Get quiz details
         const response = await getQuizById(quizId);
-        setQuiz(response.data);
+        const quizData = response.data;
+        setQuiz(quizData);
+        
+        // 添加调试输出，检查 quiz 数据
+        console.log("Quiz data loaded:", quizData);
+        console.log("Quiz course property:", quizData.course);
+        console.log("CourseId from props:", courseId);
         
         if (isStudent) {
           // Get student's quiz attempt records
@@ -86,7 +96,7 @@ function QuizDetails() {
     };
     
     fetchData();
-  }, [quizId, isStudent]);
+  }, [quizId, isStudent, courseId]);
 
   const handleEditQuiz = () => {
     navigate(`/Kambaz/Quizzes/${quizId}/edit`);
@@ -154,6 +164,44 @@ function QuizDetails() {
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
   };
 
+  const handleBackToList = () => {
+    console.log("Back button clicked");
+    console.log("CourseId from props:", courseId);
+    console.log("Quiz course property:", quiz?.course);
+
+    // 1. First priority: use courseId from props
+    if (courseId) {
+      console.log("Using courseId from props to return:", courseId);
+      navigate(`/Kambaz/Courses/${courseId}/Quizzes`);
+      return;
+    } 
+    
+    // 2. Second priority: use course from quiz data
+    if (quiz && quiz.course) {
+      console.log("Using course from quiz data to return:", quiz.course);
+      navigate(`/Kambaz/Courses/${quiz.course}/Quizzes`);
+      return;
+    }
+    
+    // 3. Try to get possible course ID from current URL
+    const urlParts = window.location.href.split('/');
+    const coursesIndex = urlParts.findIndex(part => part === 'Courses');
+    
+    if (coursesIndex !== -1 && coursesIndex + 1 < urlParts.length) {
+      const possibleCourseId = urlParts[coursesIndex + 1];
+      console.log("Possible courseId parsed from URL:", possibleCourseId);
+      
+      if (possibleCourseId && possibleCourseId !== 'undefined') {
+        navigate(`/Kambaz/Courses/${possibleCourseId}/Quizzes`);
+        return;
+      }
+    }
+    
+    // If all methods fail, show an error message
+    console.error("Unable to determine which course to return to. Please try accessing this quiz from the course list.");
+    setError("Unable to determine which course to return to. Please try accessing this quiz from the course list.");
+  };
+
   if (loading) return (
     <Container className="text-center my-5">
       <div className="spinner-border" role="status">
@@ -203,7 +251,16 @@ function QuizDetails() {
   return (
     <Container className="my-4 quiz-details-container">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="page-title">{quiz?.title}</h2>
+        <div className="d-flex align-items-center">
+          <Button 
+            variant="outline-secondary" 
+            className="me-3"
+            onClick={handleBackToList}
+          >
+            <FaArrowLeft className="me-1" /> Back to Quizzes List
+          </Button>
+          <h2 className="page-title mb-0">{quiz?.title}</h2>
+        </div>
         <div className="action-buttons">
           {isTeacher && (
             <>

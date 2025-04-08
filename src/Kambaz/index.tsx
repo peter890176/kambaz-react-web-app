@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router";
+import { Routes, Route, Navigate, useParams } from "react-router";
 import Account from "./Account";
 import Dashboard from "./Dashboard";
 import KambazNavigation from "./Navigation";
@@ -18,6 +18,11 @@ import {
   QuizPreview
 } from './Quizzes';
 
+// Create a wrapper component that will extract courseId from URL and pass it to QuizDetails
+function QuizDetailsWrapper() {
+  const { cid } = useParams();
+  return <QuizDetails courseId={cid} />;
+}
 
 export default function Kambaz() {
   const { currentUser } = useSelector((state: any) => state.accountReducer);
@@ -121,11 +126,12 @@ export default function Kambaz() {
             <Route path="Courses/:cid/Quizzes" element={<QuizzesList />} />
             <Route path="Quizzes/:quizId/edit" element={<QuizEditor />} />
             <Route path="Quizzes/:quizId" element={<QuizDetails />} />
+            <Route path="Courses/:cid/Quizzes/:quizId" element={<QuizDetailsWrapper />} />
             <Route path="Quizzes/:quizId/attempt" element={<QuizAttempt />} />
             <Route path="Quizzes/:quizId/results" element={<QuizResults />} />
+            <Route path="Quizzes/:quizId/preview" element={<QuizPreview />} />
             <Route path="Quizzes" element={<Navigate to="/Kambaz/Dashboard" />} />
             <Route path="Courses" element={<Navigate to="/Kambaz/Dashboard" />} />
-            <Route path="Quizzes/:quizId/preview" element={<QuizPreview />} />
           </Routes>
         </div>
       </div>
