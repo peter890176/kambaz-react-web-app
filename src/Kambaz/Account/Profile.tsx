@@ -96,7 +96,9 @@ export default function Profile() {
                 className="form-control-plaintext border bg-light p-2"
               />
             )}
-
+            {!currentUser || currentUser.role !== "ADMIN" ? (
+              <small className="text-muted">Only administrators can change roles.</small>
+            ) : null}
           </div>
           <button onClick={updateProfile} className="btn btn-primary w-100 mb-2"> Update </button>
           <button onClick={signout} className="wd-signout-btn btn btn-danger w-100">

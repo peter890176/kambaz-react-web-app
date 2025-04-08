@@ -1,3 +1,4 @@
+/* Modified by Claude 3.7*/
 import axios from "axios";
 const REMOTE_SERVER = import.meta.env.VITE_REMOTE_SERVER;
 const axiosWithCredentials = axios.create({ withCredentials: true });

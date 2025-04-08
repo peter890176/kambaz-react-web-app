@@ -1,4 +1,4 @@
-/*Modified by ai*/ 
+/* Modified by Claude 3.7*/
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import * as enrollmentClient from "./client";
 
