@@ -8,9 +8,15 @@ export default function Session({ children }: { children: any }) {
   const fetchProfile = async () => {
     try {
       const currentUser = await client.profile();
+      console.log("Session loaded user:", currentUser);
+      if (currentUser && !currentUser.role) {
+        // If the user has no role information, set a default role
+        console.log("User missing role, setting default");
+        currentUser.role = currentUser.role || "USER";
+      }
       dispatch(setCurrentUser(currentUser));
     } catch (err: any) {
-      console.error(err);
+      console.error("Session error:", err);
     }
     setPending(false);
   };
@@ -20,4 +26,10 @@ export default function Session({ children }: { children: any }) {
   if (!pending) {
     return children;
   }
+  // Loading indicator
+  return <div className="d-flex justify-content-center align-items-center vh-100">
+    <div className="spinner-border text-primary" role="status">
+      <span className="visually-hidden">Loading...</span>
+    </div>
+  </div>;
 }
