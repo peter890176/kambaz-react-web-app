@@ -29,6 +29,7 @@ import {
   FaQuestionCircle
 } from 'react-icons/fa';
 import './QuizzesList.css'; // Import style file
+import { useSelector } from 'react-redux';
 
 // Quiz interface definition
 interface Quiz {
@@ -60,8 +61,17 @@ function QuizzesList() {
   const [sortBy, setSortBy] = useState<'name' | 'dueDate' | 'availableDate'>('name');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<'student' | 'instructor'>('instructor'); // For simplicity, default as instructor
+  const [userRole, setUserRole] = useState<'student' | 'instructor'>('instructor'); // Default as instructor, will be updated from user data
   const [studentAttempts, setStudentAttempts] = useState<Record<string, Attempt>>({});
+  const { currentUser } = useSelector((state: any) => state.accountReducer);
+
+  // Update userRole based on currentUser from Redux
+  useEffect(() => {
+    if (currentUser && currentUser.role) {
+      console.log("Current user role:", currentUser.role);
+      setUserRole(currentUser.role === 'STUDENT' ? 'student' : 'instructor');
+    }
+  }, [currentUser]);
 
   // Get quiz list
   const fetchQuizzes = async () => {
@@ -241,13 +251,15 @@ function QuizzesList() {
         <FaQuestionCircle className="empty-state-icon" />
         <Card.Title>No Quizzes Yet</Card.Title>
         <Card.Text>Click the "+ Quiz" button to create a new quiz</Card.Text>
-        <Button 
-          variant="primary" 
-          onClick={handleCreateQuiz}
-          className="d-flex align-items-center mx-auto add-quiz-btn"
-        >
-          <FaPlus className="me-2" /> Add Quiz
-        </Button>
+        {userRole === 'instructor' && (
+          <Button 
+            variant="primary" 
+            onClick={handleCreateQuiz}
+            className="d-flex align-items-center mx-auto add-quiz-btn"
+          >
+            <FaPlus className="me-2" /> Add Quiz
+          </Button>
+        )}
       </Card.Body>
     </Card>
   );
@@ -280,20 +292,31 @@ function QuizzesList() {
               <Dropdown.Item onClick={() => handleSort('availableDate')}>Available Date</Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
-          <Button 
-            variant="danger" 
-            onClick={handleCreateQuiz}
-            className="d-flex align-items-center add-quiz-btn"
-          >
-            <FaPlus className="me-2" /> Quiz
-          </Button>
+          {userRole === 'instructor' && (
+            
+            <Button 
+              variant="danger" 
+              onClick={handleCreateQuiz}
+              className="d-flex align-items-center add-quiz-btn"
+            >
+              <FaPlus className="me-2" /> Quiz
+            </Button>
+          )}
         </div>
       </div>
       
       {error && <Alert variant="danger">{error}</Alert>}
       
       {quizzes.length === 0 ? (
-        <EmptyState />
+        userRole === 'instructor' ? <EmptyState /> : (
+          <Card className="empty-state-card">
+            <Card.Body>
+              <FaQuestionCircle className="empty-state-icon" />
+              <Card.Title>No Quizzes</Card.Title>
+              <Card.Text>There are no quizzes available right now</Card.Text>
+            </Card.Body>
+          </Card>
+        )
       ) : (
         <ListGroup>
           {quizzes.map(quiz => {
@@ -301,29 +324,31 @@ function QuizzesList() {
             return (
               <ListGroup.Item key={quiz._id} className={`p-0 mb-2 border quiz-item ${quiz.published ? 'published' : 'unpublished'}`}>
                 <Row className="m-0 p-0 align-items-center">
-                  {/* Published status icon */}
-                  <Col xs={1} className="text-center py-3">
-                    {quiz.published ? (
-                      <div 
-                        className="quiz-status-icon published" 
-                        title="Published, click to unpublish"
-                        onClick={() => togglePublishQuiz(quiz._id, true)}
-                      >
-                        <FaCheck />
-                      </div>
-                    ) : (
-                      <div 
-                        className="quiz-status-icon unpublished" 
-                        title="Unpublished, click to publish"
-                        onClick={() => togglePublishQuiz(quiz._id, false)}
-                      >
-                        <FaBan />
-                      </div>
+                  {/* Published status icon - only visible to instructors */}
+                  <Col xs={userRole === 'instructor' ? 1 : 0} className="text-center py-3">
+                    {userRole === 'instructor' && (
+                      quiz.published ? (
+                        <div 
+                          className="quiz-status-icon published" 
+                          title="Published, click to unpublish"
+                          onClick={() => togglePublishQuiz(quiz._id, true)}
+                        >
+                          <FaCheck />
+                        </div>
+                      ) : (
+                        <div 
+                          className="quiz-status-icon unpublished" 
+                          title="Unpublished, click to publish"
+                          onClick={() => togglePublishQuiz(quiz._id, false)}
+                        >
+                          <FaBan />
+                        </div>
+                      )
                     )}
                   </Col>
                   
                   {/* Quiz info (title/type etc) */}
-                  <Col xs={8} className="py-3">
+                  <Col xs={userRole === 'instructor' ? 8 : 12} className="py-3">
                     <div 
                       className="quiz-title" 
                       onClick={() => handleViewQuiz(quiz._id)}
@@ -346,22 +371,24 @@ function QuizzesList() {
                     </div>
                   </Col>
                   
-                  {/* Right action buttons */}
-                  <Col xs={3} className="d-flex justify-content-end py-3 pe-3 quiz-actions">
-                    <Dropdown>
-                      <Dropdown.Toggle variant="light" id={`dropdown-${quiz._id}`}>
-                        <FaEllipsisV />
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu>
-                        <Dropdown.Item onClick={() => handleEditQuiz(quiz._id)}>Edit</Dropdown.Item>
-                        <Dropdown.Item onClick={() => confirmDeleteQuiz(quiz._id)}>Delete</Dropdown.Item>
-                        <Dropdown.Item onClick={() => togglePublishQuiz(quiz._id, quiz.published)}>
-                          {quiz.published ? 'Unpublish' : 'Publish'}
-                        </Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleCopyQuiz(quiz._id)}>Copy to another course</Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  </Col>
+                  {/* Right action buttons - only visible to instructors */}
+                  {userRole === 'instructor' && (
+                    <Col xs={3} className="d-flex justify-content-end py-3 pe-3 quiz-actions">
+                      <Dropdown>
+                        <Dropdown.Toggle variant="light" id={`dropdown-${quiz._id}`}>
+                          <FaEllipsisV />
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          <Dropdown.Item onClick={() => handleEditQuiz(quiz._id)}>Edit</Dropdown.Item>
+                          <Dropdown.Item onClick={() => confirmDeleteQuiz(quiz._id)}>Delete</Dropdown.Item>
+                          <Dropdown.Item onClick={() => togglePublishQuiz(quiz._id, quiz.published)}>
+                            {quiz.published ? 'Unpublish' : 'Publish'}
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={() => handleCopyQuiz(quiz._id)}>Copy to another course</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
+                  )}
                 </Row>
               </ListGroup.Item>
             );

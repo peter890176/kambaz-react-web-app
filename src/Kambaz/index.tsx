@@ -24,6 +24,18 @@ function QuizDetailsWrapper() {
   return <QuizDetails courseId={cid} />;
 }
 
+// Create a wrapper component for QuizResults with courseId
+function QuizResultsWrapper() {
+  const { cid } = useParams();
+  return <QuizResults courseId={cid} />;
+}
+
+// Create a wrapper component for QuizAttempt with courseId
+function QuizAttemptWrapper() {
+  const { cid } = useParams();
+  return <QuizAttempt courseId={cid} />;
+}
+
 export default function Kambaz() {
   const { currentUser } = useSelector((state: any) => state.accountReducer);
   const [enrolling, setEnrolling] = useState<boolean>(false);
@@ -128,7 +140,9 @@ export default function Kambaz() {
             <Route path="Quizzes/:quizId" element={<QuizDetails />} />
             <Route path="Courses/:cid/Quizzes/:quizId" element={<QuizDetailsWrapper />} />
             <Route path="Quizzes/:quizId/attempt" element={<QuizAttempt />} />
+            <Route path="Courses/:cid/Quizzes/:quizId/attempt" element={<QuizAttemptWrapper />} />
             <Route path="Quizzes/:quizId/results" element={<QuizResults />} />
+            <Route path="Courses/:cid/Quizzes/:quizId/results" element={<QuizResultsWrapper />} />
             <Route path="Quizzes/:quizId/preview" element={<QuizPreview />} />
             <Route path="Quizzes" element={<Navigate to="/Kambaz/Dashboard" />} />
             <Route path="Courses" element={<Navigate to="/Kambaz/Dashboard" />} />

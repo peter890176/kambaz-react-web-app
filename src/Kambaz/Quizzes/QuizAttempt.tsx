@@ -4,11 +4,17 @@ import { Container, Card, Button, ProgressBar, Form, Alert } from 'react-bootstr
 import { getQuizById, submitAttempt } from './api';
 import { FaArrowRight, FaArrowLeft, FaCheck } from 'react-icons/fa';
 
-function QuizAttempt() {
-  const { quizId } = useParams<{ quizId: string }>();
+// 添加接口定義
+interface QuizAttemptProps {
+  courseId?: string;
+}
+
+function QuizAttempt({ courseId: propCourseId }: QuizAttemptProps) {
+  const { quizId, cid } = useParams<{ quizId: string; cid?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const attemptId = location.state?.attemptId;
+  const courseIdFromState = location.state?.courseId;
   
   const [quiz, setQuiz] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -17,6 +23,7 @@ function QuizAttempt() {
   const [answers, setAnswers] = useState<any[]>([]);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
+  const [courseId, setCourseId] = useState<string | undefined>(propCourseId || cid || courseIdFromState);
 
   // Check parameter validity
   useEffect(() => {
@@ -32,8 +39,8 @@ function QuizAttempt() {
       return;
     }
     
-    console.log(`Starting quiz attempt, Quiz ID: ${quizId}, Attempt ID: ${attemptId}`);
-  }, [quizId, attemptId]);
+    console.log(`Starting quiz attempt, Quiz ID: ${quizId}, Attempt ID: ${attemptId}, Course ID: ${courseId}`);
+  }, [quizId, attemptId, courseId]);
 
   // Get quiz details
   useEffect(() => {
@@ -48,6 +55,12 @@ function QuizAttempt() {
         }
         
         setQuiz(response.data);
+        
+        // Set courseId from quiz if not already set
+        if (!courseId && response.data.course) {
+          console.log("Setting courseId from quiz.course:", response.data.course);
+          setCourseId(response.data.course);
+        }
         
         // Initialize answers array
         const initialAnswers = response.data.questions.map((q: any) => ({
@@ -72,7 +85,7 @@ function QuizAttempt() {
     };
     
     fetchQuiz();
-  }, [quizId, attemptId]);
+  }, [quizId, attemptId, courseId]);
 
   // Countdown
   useEffect(() => {
@@ -137,6 +150,13 @@ function QuizAttempt() {
     try {
       setSubmitting(true);
       console.log(`Submitting quiz attempt, Quiz ID: ${quizId}, Attempt ID: ${attemptId}`);
+      console.log("Quiz object:", quiz);
+      console.log("Quiz course property:", quiz?.course);
+      console.log("Course ID from params or state:", courseId);
+      
+      // Get the final courseId value, with fallbacks
+      const finalCourseId = courseId || quiz?.course || quiz?.courseCode;
+      console.log("Final course ID for results navigation:", finalCourseId);
       
       // Clean answer data, remove empty values
       const processedAnswers = answers.map(answer => {
@@ -160,14 +180,26 @@ function QuizAttempt() {
       
       console.log("Quiz submission successful, score:", response.score);
       
-      // Navigate to results page, preserve quiz ID and attempt information
-      navigate(`/Kambaz/Quizzes/${quizId}/results`, { 
-        state: { 
-          attemptId: attemptId,
-          score: response.score,
-          totalPoints: quiz?.totalPoints
-        } 
-      });
+      // Navigate to results with courseId
+      if (finalCourseId) {
+        navigate(`/Kambaz/Courses/${finalCourseId}/Quizzes/${quizId}/results`, { 
+          state: { 
+            attemptId: attemptId,
+            score: response.score,
+            totalPoints: quiz?.totalPoints,
+            courseId: finalCourseId
+          } 
+        });
+      } else {
+        // Fallback if no courseId is available
+        navigate(`/Kambaz/Quizzes/${quizId}/results`, { 
+          state: { 
+            attemptId: attemptId,
+            score: response.score,
+            totalPoints: quiz?.totalPoints
+          } 
+        });
+      }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to submit quiz';
       setError(errorMessage);

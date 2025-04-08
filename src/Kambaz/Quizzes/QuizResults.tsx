@@ -6,8 +6,13 @@ import { getQuizById, getAttemptsForQuiz } from './api';
 import { useSelector } from 'react-redux';
 import './QuizResults.css';
 
-function QuizResults() {
-  const { quizId } = useParams<{ quizId: string }>();
+// Add courseId prop to component interface
+interface QuizResultsProps {
+  courseId?: string;
+}
+
+function QuizResults({ courseId: propCourseId }: QuizResultsProps) {
+  const { quizId, cid } = useParams<{ quizId: string; cid?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const [attempt, setAttempt] = useState<any>(null);
@@ -23,6 +28,16 @@ function QuizResults() {
   const attemptId = location.state?.attemptId;
   const score = location.state?.score;
   const totalPoints = location.state?.totalPoints;
+  const courseIdFromState = location.state?.courseId;
+  
+  // Determine the effective courseId from multiple sources
+  const effectiveCourseId = propCourseId || cid || courseIdFromState || null;
+
+  // Function to directly navigate to homepage or main quizzes page
+  const safeNavigate = () => {
+    // Navigate to main dashboard as a fallback
+    navigate('/Kambaz/Dashboard');
+  };
 
   useEffect(() => {
     if (!quizId) return;
@@ -33,7 +48,13 @@ function QuizResults() {
         
         // Get quiz details
         const quizResponse = await getQuizById(quizId);
-        setQuiz(quizResponse.data);
+        const quizData = quizResponse.data;
+        setQuiz(quizData);
+        
+        // Debug: Log the full quiz object to inspect its properties
+        console.log("Quiz data in QuizResults:", quizData);
+        console.log("Course ID in quiz data:", quizData.course);
+        console.log("CourseId from props/params/state:", effectiveCourseId);
         
         // Get all quiz attempt records
         const attemptsResponse = await getAttemptsForQuiz(quizId);
@@ -66,7 +87,40 @@ function QuizResults() {
     };
     
     fetchData();
-  }, [quizId, attemptId]);
+  }, [quizId, attemptId, effectiveCourseId]);
+
+  // Function to return to the quiz list page with courseId
+  const handleBackToList = () => {
+    console.log("Back button clicked in QuizResults");
+    console.log("Effective courseId:", effectiveCourseId);
+    console.log("Quiz course property:", quiz?.course);
+    console.log("Quiz courseCode property:", quiz?.courseCode);
+    
+    // First priority: use effective courseId
+    if (effectiveCourseId) {
+      console.log("Navigating to course quizzes with effective courseId:", effectiveCourseId);
+      navigate(`/Kambaz/Courses/${effectiveCourseId}/Quizzes`);
+      return;
+    }
+    
+    // Second priority: use course from quiz data
+    if (quiz && quiz.course) {
+      console.log("Navigating to course quizzes with quiz.course:", quiz.course);
+      navigate(`/Kambaz/Courses/${quiz.course}/Quizzes`);
+      return;
+    }
+    
+    // Third priority: use courseCode from quiz data
+    if (quiz && quiz.courseCode) {
+      console.log("Navigating to course quizzes with quiz.courseCode:", quiz.courseCode);
+      navigate(`/Kambaz/Courses/${quiz.courseCode}/Quizzes`);
+      return;
+    }
+    
+    // Fallback: go to dashboard
+    console.log("No course ID available, navigating to dashboard");
+    navigate('/Kambaz/Dashboard');
+  };
 
   // Calculate score percentage
   const calculatePercentage = (score: number, totalPoints: number) => {
@@ -265,14 +319,29 @@ function QuizResults() {
           </div>
         </Card.Body>
         <Card.Footer className="d-flex justify-content-between">
-          <Button variant="secondary" onClick={() => navigate(-1)}>
-            <FaArrowLeft className="me-1" /> Back
+          <Button variant="secondary" onClick={handleBackToList}>
+            <FaArrowLeft className="me-1" /> Back to Quizzes
           </Button>
           
-          {quiz.multipleAttempts && !attemptLimitReached && (
+          {quiz?.multipleAttempts && !attemptLimitReached && (
             <Button 
               variant="primary" 
-              onClick={() => navigate(`/Kambaz/Quizzes/${quiz._id}`)}
+              onClick={() => {
+                // Pass courseId when navigating to try again
+                const courseIdForNavigation = effectiveCourseId || quiz?.course || quiz?.courseCode;
+                
+                if (courseIdForNavigation) {
+                  // Navigate with course ID in the URL
+                  navigate(`/Kambaz/Courses/${courseIdForNavigation}/Quizzes/${quiz._id}`, {
+                    state: { courseId: courseIdForNavigation }
+                  });
+                } else {
+                  // Fallback to route without course ID
+                  navigate(`/Kambaz/Quizzes/${quiz._id}`, {
+                    state: { courseId: quiz?.course || quiz?.courseCode }
+                  });
+                }
+              }}
             >
               Try Again <FaArrowRight className="ms-1" />
             </Button>
