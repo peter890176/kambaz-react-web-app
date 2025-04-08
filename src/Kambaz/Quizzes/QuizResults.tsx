@@ -19,7 +19,7 @@ function QuizResults() {
   const [attemptLimitReached, setAttemptLimitReached] = useState(false);
   const { currentUser } = useSelector((state: any) => state.accountReducer);
   
-  // 從 location 中獲取傳遞的參數
+  // Get parameters passed from location
   const attemptId = location.state?.attemptId;
   const score = location.state?.score;
   const totalPoints = location.state?.totalPoints;
@@ -31,22 +31,22 @@ function QuizResults() {
       try {
         setLoading(true);
         
-        // 獲取測驗詳情
+        // Get quiz details
         const quizResponse = await getQuizById(quizId);
         setQuiz(quizResponse.data);
         
-        // 獲取所有測驗嘗試記錄
+        // Get all quiz attempt records
         const attemptsResponse = await getAttemptsForQuiz(quizId);
         if (Array.isArray(attemptsResponse) && attemptsResponse.length > 0) {
-          // 按創建時間排序，最新的在前
+          // Sort by creation time, newest first
           const sortedAttempts = attemptsResponse.sort((a, b) => 
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
           
           setAllAttempts(sortedAttempts);
           
-          // 如果有從 location 傳來的 attemptId，則使用該嘗試
-          // 否則使用最新的嘗試
+          // If there's an attemptId from location, use that attempt
+          // Otherwise use the latest attempt
           const targetAttempt = attemptId 
             ? sortedAttempts.find(a => a._id === attemptId)
             : sortedAttempts[0];
@@ -58,8 +58,8 @@ function QuizResults() {
           }
         }
       } catch (err: any) {
-        console.error('獲取測驗結果數據失敗:', err);
-        setError(err.message || '獲取測驗結果失敗');
+        console.error('Failed to get quiz result data:', err);
+        setError(err.message || 'Failed to get quiz results');
       } finally {
         setLoading(false);
       }
@@ -68,13 +68,13 @@ function QuizResults() {
     fetchData();
   }, [quizId, attemptId]);
 
-  // 計算得分百分比
+  // Calculate score percentage
   const calculatePercentage = (score: number, totalPoints: number) => {
     if (!score || !totalPoints) return 0;
     return Math.round((score / totalPoints) * 100);
   };
 
-  // 根據分數百分比返回顏色
+  // Return color based on score percentage
   const getScoreColor = (percentage: number) => {
     if (percentage >= 90) return 'success';
     if (percentage >= 70) return 'primary';
@@ -82,13 +82,13 @@ function QuizResults() {
     return 'danger';
   };
 
-  // 計算測驗用時（分鐘）
+  // Calculate quiz duration (minutes)
   const calculateDuration = (startTime: string, endTime: string) => {
     if (!startTime || !endTime) return 0;
     return Math.round((new Date(endTime).getTime() - new Date(startTime).getTime()) / 60000);
   };
 
-  // 查看指定的嘗試記錄
+  // View specific attempt record
   const viewAttempt = (attemptId: string) => {
     const selectedAttempt = allAttempts.find(a => a._id === attemptId);
     if (selectedAttempt) {
@@ -100,7 +100,7 @@ function QuizResults() {
     return (
       <Container className="my-5 text-center">
         <div className="spinner-border" role="status">
-          <span className="visually-hidden">載入中...</span>
+          <span className="visually-hidden">Loading...</span>
         </div>
       </Container>
     );
@@ -110,10 +110,10 @@ function QuizResults() {
     return (
       <Container className="my-4">
         <Alert variant="danger">
-          <Alert.Heading>發生錯誤</Alert.Heading>
+          <Alert.Heading>An error occurred</Alert.Heading>
           <p>{error}</p>
           <div className="d-flex justify-content-end">
-            <Button variant="outline-danger" onClick={() => navigate(-1)}>返回</Button>
+            <Button variant="outline-danger" onClick={() => navigate(-1)}>Back</Button>
           </div>
         </Alert>
       </Container>
@@ -124,10 +124,10 @@ function QuizResults() {
     return (
       <Container className="my-4">
         <Alert variant="warning">
-          <Alert.Heading>找不到測驗結果</Alert.Heading>
-          <p>無法找到此測驗的嘗試記錄。請確保您已完成測驗。</p>
+          <Alert.Heading>Quiz results not found</Alert.Heading>
+          <p>Unable to find attempt records for this quiz. Please make sure you have completed the quiz.</p>
           <div className="d-flex justify-content-end">
-            <Button variant="outline-warning" onClick={() => navigate(-1)}>返回</Button>
+            <Button variant="outline-warning" onClick={() => navigate(-1)}>Back</Button>
           </div>
         </Alert>
       </Container>
@@ -143,14 +143,14 @@ function QuizResults() {
       <Card className="mb-4">
         <Card.Header className="bg-primary text-white">
           <div className="d-flex justify-content-between align-items-center">
-            <h3 className="mb-0">測驗結果</h3>
+            <h3 className="mb-0">Quiz Results</h3>
             {allAttempts.length > 1 && (
               <Button 
                 variant="light" 
                 size="sm" 
                 onClick={() => setShowAttemptsModal(true)}
               >
-                查看所有嘗試 ({allAttempts.length})
+                View All Attempts ({allAttempts.length})
               </Button>
             )}
           </div>
@@ -163,7 +163,7 @@ function QuizResults() {
           
           <div className="text-center my-4">
             <h2 className={`text-${scoreColor}`}>
-              {attempt.score} / {quiz.totalPoints} 分 ({scorePercentage}%)
+              {attempt.score} / {quiz.totalPoints} Points ({scorePercentage}%)
             </h2>
             <ProgressBar 
               variant={scoreColor} 
@@ -177,15 +177,15 @@ function QuizResults() {
           <Alert variant="info" className="mt-4 d-flex justify-content-between">
             <div>
               <FaCalendarAlt className="me-2" />
-              <strong>完成時間:</strong> {new Date(attempt.endTime).toLocaleString()}
+              <strong>Completion Time:</strong> {new Date(attempt.endTime).toLocaleString()}
             </div>
             <div>
               <FaClock className="me-2" />
-              <strong>用時:</strong> {duration} 分鐘
+              <strong>Duration:</strong> {duration} minutes
             </div>
           </Alert>
           
-          <h5 className="mt-4 mb-3">問題回顧</h5>
+          <h5 className="mt-4 mb-3">Question Review</h5>
           <div className="question-review">
             {attempt.answers && attempt.answers.map((answer: any, index: number) => {
               const question = quiz.questions.find((q: any) => q._id === answer.questionId || q._id === answer.question);
@@ -198,19 +198,19 @@ function QuizResults() {
                 >
                   <Card.Header className="d-flex justify-content-between align-items-center">
                     <div className="question-header">
-                      <span className="question-number">問題 {index + 1}</span>
+                      <span className="question-number">Question {index + 1}</span>
                       <span className="question-title">{question.title}</span>
                     </div>
                     <div className="d-flex align-items-center">
                       {answer.isCorrect ? (
                         <>
                           <FaCheckCircle className="text-success me-2" />
-                          <Badge bg="success">{question.points} 分</Badge>
+                          <Badge bg="success">{question.points} Points</Badge>
                         </>
                       ) : (
                         <>
                           <FaTimesCircle className="text-danger me-2" />
-                          <Badge bg="danger">0 分</Badge>
+                          <Badge bg="danger">0 Points</Badge>
                         </>
                       )}
                     </div>
@@ -219,42 +219,42 @@ function QuizResults() {
                     <Card.Text className="question-text">{question.questionText}</Card.Text>
                     
                     <div className="mt-3">
-                      <strong>你的答案:</strong>
+                      <strong>Your Answer:</strong>
                       {question.questionType === 'MULTIPLE_CHOICE' && (
                         <div className="user-answer">
                           {question.choices.find((c: any) => 
                             c._id === answer.answerChoice || c.id === answer.answerChoice
-                          )?.text || '未回答'}
+                          )?.text || 'Not Answered'}
                         </div>
                       )}
                       
                       {question.questionType === 'TRUE_FALSE' && (
                         <div className="user-answer">
-                          {answer.answerBoolean === true ? '是' : 
-                           answer.answerBoolean === false ? '否' : '未回答'}
+                          {answer.answerBoolean === true ? 'True' : 
+                           answer.answerBoolean === false ? 'False' : 'Not Answered'}
                         </div>
                       )}
                       
                       {question.questionType === 'FILL_BLANK' && (
-                        <div className="user-answer">{answer.answerText || '未回答'}</div>
+                        <div className="user-answer">{answer.answerText || 'Not Answered'}</div>
                       )}
                     </div>
                     
                     {quiz.showCorrectAnswers && !answer.isCorrect && (
                       <div className="mt-3 correct-answer-display">
-                        <strong>正確答案:</strong>
+                        <strong>Correct Answer:</strong>
                         {question.questionType === 'MULTIPLE_CHOICE' && (
                           <div>
-                            {question.choices.find((c: any) => c.isCorrect)?.text || '無法顯示'}
+                            {question.choices.find((c: any) => c.isCorrect)?.text || 'Cannot Display'}
                           </div>
                         )}
                         
                         {question.questionType === 'TRUE_FALSE' && (
-                          <div>{question.correctAnswer ? '是' : '否'}</div>
+                          <div>{question.correctAnswer ? 'True' : 'False'}</div>
                         )}
                         
                         {question.questionType === 'FILL_BLANK' && (
-                          <div>{question.correctAnswers?.join(' 或 ') || '無法顯示'}</div>
+                          <div>{question.correctAnswers?.join(' or ') || 'Cannot Display'}</div>
                         )}
                       </div>
                     )}
@@ -266,7 +266,7 @@ function QuizResults() {
         </Card.Body>
         <Card.Footer className="d-flex justify-content-between">
           <Button variant="secondary" onClick={() => navigate(-1)}>
-            <FaArrowLeft className="me-1" /> 返回
+            <FaArrowLeft className="me-1" /> Back
           </Button>
           
           {quiz.multipleAttempts && !attemptLimitReached && (
@@ -274,13 +274,13 @@ function QuizResults() {
               variant="primary" 
               onClick={() => navigate(`/Kambaz/Quizzes/${quiz._id}`)}
             >
-              再次嘗試 <FaArrowRight className="ms-1" />
+              Try Again <FaArrowRight className="ms-1" />
             </Button>
           )}
         </Card.Footer>
       </Card>
       
-      {/* 嘗試歷史記錄對話框 */}
+      {/* Attempts history dialog */}
       <Modal 
         show={showAttemptsModal} 
         onHide={() => setShowAttemptsModal(false)}
@@ -288,18 +288,18 @@ function QuizResults() {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>測驗嘗試歷史</Modal.Title>
+          <Modal.Title>Quiz Attempt History</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Table striped bordered hover responsive>
             <thead>
               <tr>
                 <th>#</th>
-                <th>日期</th>
-                <th>分數</th>
-                <th>百分比</th>
-                <th>用時</th>
-                <th>操作</th>
+                <th>Date</th>
+                <th>Score</th>
+                <th>Percentage</th>
+                <th>Duration</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -312,7 +312,7 @@ function QuizResults() {
                   <td>{new Date(att.endTime || att.createdAt).toLocaleString()}</td>
                   <td>{att.score} / {quiz.totalPoints}</td>
                   <td>{calculatePercentage(att.score, quiz.totalPoints)}%</td>
-                  <td>{calculateDuration(att.startTime, att.endTime)} 分鐘</td>
+                  <td>{calculateDuration(att.startTime, att.endTime)} minutes</td>
                   <td>
                     <Button 
                       variant={att._id === attempt._id ? 'secondary' : 'outline-primary'} 
@@ -323,7 +323,7 @@ function QuizResults() {
                       }}
                       disabled={att._id === attempt._id}
                     >
-                      {att._id === attempt._id ? '當前查看' : '查看'}
+                      {att._id === attempt._id ? 'Currently Viewing' : 'View'}
                     </Button>
                   </td>
                 </tr>
@@ -333,7 +333,7 @@ function QuizResults() {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowAttemptsModal(false)}>
-            關閉
+            Close
           </Button>
         </Modal.Footer>
       </Modal>

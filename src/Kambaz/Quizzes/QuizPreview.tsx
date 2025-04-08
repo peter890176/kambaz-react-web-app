@@ -51,16 +51,16 @@ interface Quiz {
   totalPoints: number;
 }
 
-// 用戶回答類型
+// User answer type
 interface Answer {
   questionId: string;
-  answerChoice?: string; // 用於選擇題
-  answerBoolean?: boolean; // 用於是非題
-  answerText?: string; // 用於填空題
-  isCorrect?: boolean; // 標記答案是否正確
+  answerChoice?: string; // for multiple choice questions
+  answerBoolean?: boolean; // for true/false questions
+  answerText?: string; // for fill-in-the-blank questions
+  isCorrect?: boolean; // mark if the answer is correct
 }
 
-// 測驗嘗試類型
+// Quiz attempt type
 interface Attempt {
   _id: string;
   quiz: string;
@@ -95,7 +95,7 @@ const QuizPreview: React.FC = () => {
   const [isViewingAttempt, setIsViewingAttempt] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
-  // 載入測驗數據及嘗試記錄
+  // Load quiz data and attempt records
   useEffect(() => {
     const fetchQuizAndAttempts = async () => {
       if (!quizId) return;
@@ -106,7 +106,7 @@ const QuizPreview: React.FC = () => {
         const quizData = response.data;
         setQuiz(quizData);
         
-        // 初始化用戶回答
+        // Initialize user answers
         const initialAnswers = quizData.questions.map((question: Question) => ({
           questionId: question._id || '',
           answerChoice: undefined,
@@ -115,22 +115,22 @@ const QuizPreview: React.FC = () => {
           isCorrect: false
         }));
         
-        // 設置時間限制
+        // Set time limit
         if (quizData.timeLimit) {
-          setTimeRemaining(quizData.timeLimit * 60); // 轉換為秒
+          setTimeRemaining(quizData.timeLimit * 60); // convert to seconds
         }
 
-        // 檢查是否為預覽模式（教師訪問）
+        // Check if in preview mode (teacher access)
         const isFaculty = currentUser && (currentUser.role === "FACULTY" || currentUser.role === "ADMIN");
         setIsPreviewMode(isFaculty);
         
-        // 獲取用戶先前的嘗試記錄
+        // Get user's previous attempts
         try {
           const attemptsResponse = await getAttemptsForQuiz(quizId);
           if (attemptsResponse && attemptsResponse.length > 0) {
             setPreviousAttempts(attemptsResponse);
             
-            // 檢查是否達到嘗試次數上限
+            // Check if attempt limit reached
             if (!isFaculty) {
               const completedAttempts = attemptsResponse.filter(
                 (att: Attempt) => att.completed
@@ -138,8 +138,8 @@ const QuizPreview: React.FC = () => {
               
               if (!quizData.multipleAttempts && completedAttempts.length > 0) {
                 setAttemptLimitReached(true);
-                // 載入最後一次嘗試的答案
-                const lastAttempt = completedAttempts[0]; // 已按時間排序
+                // Load answers from the last attempt
+                const lastAttempt = completedAttempts[0]; // already sorted by time
                 if (lastAttempt.answers && lastAttempt.answers.length > 0) {
                   setUserAnswers(lastAttempt.answers);
                   setScore(lastAttempt.score);
@@ -149,8 +149,8 @@ const QuizPreview: React.FC = () => {
               } else if (quizData.multipleAttempts && 
                 completedAttempts.length >= quizData.attemptsAllowed) {
                 setAttemptLimitReached(true);
-                // 載入最後一次嘗試的答案
-                const lastAttempt = completedAttempts[0]; // 已按時間排序
+                // Load answers from the last attempt
+                const lastAttempt = completedAttempts[0]; // already sorted by time
                 if (lastAttempt.answers && lastAttempt.answers.length > 0) {
                   setUserAnswers(lastAttempt.answers);
                   setScore(lastAttempt.score);
@@ -161,18 +161,18 @@ const QuizPreview: React.FC = () => {
                 setUserAnswers(initialAnswers);
               }
             } else {
-              // 教師預覽模式
+              // Teacher preview mode
               setUserAnswers(initialAnswers);
             }
           } else {
             setUserAnswers(initialAnswers);
           }
         } catch (attemptsErr) {
-          console.error('獲取測驗嘗試記錄失敗:', attemptsErr);
+          console.error('Failed to get quiz attempt records:', attemptsErr);
           setUserAnswers(initialAnswers);
         }
         
-        // 只有在未達到嘗試上限且不是查看歷史嘗試時才建立新的嘗試
+        // Only create a new attempt if attempt limit not reached and not viewing history attempt
         if (!attemptLimitReached && !isViewingAttempt && !showResults) {
           try {
             const attemptResponse = await createAttempt(quizId);
@@ -180,16 +180,16 @@ const QuizPreview: React.FC = () => {
             setStartTime(new Date(attemptResponse.data.startTime));
           } catch (attemptErr: any) {
             if (attemptErr.response && attemptErr.response.status === 400 && 
-                attemptErr.response.data.message === "已達到嘗試次數上限") {
+                attemptErr.response.data.message === "Attempt limit reached") {
               setAttemptLimitReached(true);
             } else {
-              console.error('無法創建測驗嘗試:', attemptErr);
+              console.error('Cannot create quiz attempt:', attemptErr);
             }
           }
         }
       } catch (err: any) {
-        setError(err.message || '載入測驗失敗');
-        console.error('載入測驗失敗:', err);
+        setError(err.message || 'Failed to load quiz');
+        console.error('Failed to load quiz:', err);
       } finally {
         setLoading(false);
       }
@@ -197,7 +197,7 @@ const QuizPreview: React.FC = () => {
     
     fetchQuizAndAttempts();
     
-    // 清理函數
+    // Cleanup function
     return () => {
       if (timerInterval) {
         window.clearInterval(timerInterval);
@@ -205,7 +205,7 @@ const QuizPreview: React.FC = () => {
     };
   }, [quizId, attemptLimitReached, isViewingAttempt, currentUser]);
 
-  // 設置計時器
+  // Set timer
   useEffect(() => {
     if (timeRemaining !== null && !showResults && !attemptLimitReached && !isViewingAttempt) {
       const timer = window.setInterval(() => {
@@ -213,7 +213,7 @@ const QuizPreview: React.FC = () => {
           if (prev && prev > 0) {
             return prev - 1;
           } else {
-            // 時間到，自動提交
+            // Time's up, auto-submit
             handleSubmitQuiz();
             if (timer) window.clearInterval(timer);
             return 0;
@@ -227,14 +227,14 @@ const QuizPreview: React.FC = () => {
     }
   }, [timeRemaining, showResults, attemptLimitReached, isViewingAttempt]);
 
-  // 格式化剩餘時間
+  // Format remaining time
   const formatTimeRemaining = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // 處理回答變更
+  // Handle answer change
   const handleAnswerChange = (questionIndex: number, value: any, type: 'choice' | 'boolean' | 'text') => {
     if (showResults || attemptLimitReached || isViewingAttempt) return;
     
@@ -266,26 +266,26 @@ const QuizPreview: React.FC = () => {
     setUserAnswers(newAnswers);
   };
 
-  // 移動到下一個問題
+  // Move to next question
   const handleNextQuestion = () => {
     if (quiz && currentQuestionIndex < quiz.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
 
-  // 移動到上一個問題
+  // Move to previous question
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
 
-  // 提交測驗
+  // Submit quiz
   const handleSubmitQuiz = async () => {
     if (!quiz || !attempt) return;
     
     try {
-      // 計算分數
+      // Calculate score
       let totalScore = 0;
       
       const scoredAnswers = userAnswers.map((answer, index) => {
@@ -293,14 +293,14 @@ const QuizPreview: React.FC = () => {
         let isCorrect = false;
         
         if (question.questionType === 'MULTIPLE_CHOICE' && question.choices) {
-          // 檢查選擇題答案
+          // Check multiple choice answer
           const correctChoice = question.choices.find(choice => choice.isCorrect);
           isCorrect = correctChoice ? answer.answerChoice === correctChoice.id : false;
         } else if (question.questionType === 'TRUE_FALSE') {
-          // 檢查是非題答案
+          // Check true/false answer
           isCorrect = answer.answerBoolean === question.correctAnswer;
         } else if (question.questionType === 'FILL_BLANK' && question.correctAnswers) {
-          // 檢查填空題答案
+          // Check fill-in-the-blank answer
           isCorrect = question.correctAnswers.some(
             correctAns => answer.answerText?.toLowerCase() === correctAns.toLowerCase()
           );
@@ -319,7 +319,7 @@ const QuizPreview: React.FC = () => {
       setScore(totalScore);
       setUserAnswers(scoredAnswers);
       
-      // 提交嘗試
+      // Submit attempt
       const attemptData = {
         answers: scoredAnswers,
         score: totalScore,
@@ -329,19 +329,19 @@ const QuizPreview: React.FC = () => {
       
       await submitAttempt(attempt._id, attemptData);
       
-      // 顯示結果
+      // Show results
       setShowResults(true);
       
-      // 停止計時器
+      // Stop timer
       if (timerInterval) {
         window.clearInterval(timerInterval);
       }
       
-      // 重新獲取嘗試記錄
+      // Refresh attempt records
       const attemptsResponse = await getAttemptsForQuiz(quizId as string);
       setPreviousAttempts(attemptsResponse);
       
-      // 檢查是否達到嘗試次數上限
+      // Check if attempt limit reached
       if (!isPreviewMode) {
         const completedAttempts = attemptsResponse.filter(
           (att: Attempt) => att.completed
@@ -355,20 +355,20 @@ const QuizPreview: React.FC = () => {
       }
       
     } catch (err: any) {
-      setError(err.message || '提交測驗失敗');
-      console.error('提交測驗失敗:', err);
+      setError(err.message || 'Failed to submit quiz');
+      console.error('Failed to submit quiz:', err);
     }
   };
 
-  // 導航到編輯頁面
+  // Navigate to edit page
   const handleEditQuiz = () => {
     navigate(`/Kambaz/Quizzes/${quizId}/edit`);
   };
 
-  // 重新開始測驗
+  // Restart quiz
   const handleRestartQuiz = () => {
     if (attemptLimitReached && !isPreviewMode) {
-      setError('您已達到此測驗的嘗試次數上限');
+      setError('You have reached the maximum number of attempts for this quiz');
       return;
     }
     
@@ -376,7 +376,7 @@ const QuizPreview: React.FC = () => {
     setCurrentQuestionIndex(0);
     setIsViewingAttempt(false);
     
-    // 重置回答
+    // Reset answers
     if (quiz) {
       const initialAnswers = quiz.questions.map((question: Question) => ({
         questionId: question._id || '',
@@ -388,12 +388,12 @@ const QuizPreview: React.FC = () => {
       setUserAnswers(initialAnswers);
     }
     
-    // 重設時間
+    // Reset time
     if (quiz?.timeLimit) {
       setTimeRemaining(quiz.timeLimit * 60);
     }
     
-    // 重新創建嘗試
+    // Create new attempt
     const createNewAttempt = async () => {
       if (!quizId) return;
       
@@ -403,11 +403,11 @@ const QuizPreview: React.FC = () => {
         setStartTime(new Date(attemptResponse.data.startTime));
       } catch (err: any) {
         if (err.response && err.response.status === 400 && 
-            err.response.data.message === "已達到嘗試次數上限") {
+            err.response.data.message === "Attempt limit reached") {
           setAttemptLimitReached(true);
-          setError('您已達到此測驗的嘗試次數上限');
+          setError('You have reached the maximum number of attempts for this quiz');
         } else {
-          console.error('無法創建新的測驗嘗試:', err);
+          console.error('Cannot create new quiz attempt:', err);
         }
       }
     };
@@ -415,7 +415,7 @@ const QuizPreview: React.FC = () => {
     createNewAttempt();
   };
 
-  // 查看特定嘗試的答案
+  // View specific attempt answers
   const viewAttempt = (attemptToView: Attempt) => {
     setIsViewingAttempt(true);
     setShowResults(true);
@@ -426,7 +426,7 @@ const QuizPreview: React.FC = () => {
     setStartTime(new Date(attemptToView.startTime));
   };
 
-  // 渲染測驗信息
+  // Render quiz information
   const renderQuizInfo = () => {
     if (!quiz) return null;
     
@@ -443,12 +443,12 @@ const QuizPreview: React.FC = () => {
               {isPreviewMode ? (
                 <>
                   <FaExclamationTriangle className="me-2" />
-                  這是測驗的預覽版本
+                  This is a preview version of the quiz
                 </>
               ) : (
                 <>
                   <FaUser className="me-2" />
-                  學生測驗
+                  Student Quiz
                 </>
               )}
             </div>
@@ -459,33 +459,33 @@ const QuizPreview: React.FC = () => {
                 onClick={() => setShowAttemptsHistory(true)}
               >
                 <FaHistory className="me-1" />
-                查看嘗試歷史
+                View Attempt History
               </Button>
             )}
           </div>
         </Card.Header>
         <Card.Body>
           <small className="text-muted">
-            {isViewingAttempt ? '嘗試時間: ' : '開始時間: '}
+            {isViewingAttempt ? 'Attempt Time: ' : 'Start Time: '}
             {startTime.toLocaleString()}
           </small>
           <h2 className="mb-3">{quiz.title}</h2>
           <div className="quiz-description mb-3">{quiz.description}</div>
           <div className="d-flex justify-content-between flex-wrap mb-2">
             <div>
-              <Badge bg="info" className="me-2">總分: {quiz.totalPoints} 分</Badge>
-              <Badge bg="secondary" className="me-2">時間限制: {quiz.timeLimit} 分鐘</Badge>
-              <Badge bg="secondary">問題數量: {quiz.questions.length}</Badge>
+              <Badge bg="info" className="me-2">Total Points: {quiz.totalPoints} points</Badge>
+              <Badge bg="secondary" className="me-2">Time Limit: {quiz.timeLimit} minutes</Badge>
+              <Badge bg="secondary">Number of Questions: {quiz.questions.length}</Badge>
               {!isPreviewMode && (
                 <Badge bg={attemptsRemaining > 0 ? "success" : "danger"} className="ms-2">
-                  剩餘嘗試次數: {attemptsRemaining}
+                  Remaining Attempts: {attemptsRemaining}
                 </Badge>
               )}
             </div>
             <div>
               {timeRemaining !== null && !showResults && !attemptLimitReached && !isViewingAttempt && (
                 <div className="timer">
-                  剩餘時間: <strong>{formatTimeRemaining(timeRemaining)}</strong>
+                  Time Remaining: <strong>{formatTimeRemaining(timeRemaining)}</strong>
                 </div>
               )}
             </div>
@@ -500,14 +500,14 @@ const QuizPreview: React.FC = () => {
             </div>
           )}
           <div className="quiz-instructions">
-            <h5>測驗說明</h5>
+            <h5>Quiz Instructions</h5>
             {isPreviewMode ? (
-              <p>這是預覽模式。您可以回答問題並提交測驗，系統會計算您的分數。</p>
+              <p>This is preview mode. You can answer questions and submit the quiz, and the system will calculate your score.</p>
             ) : (
               <>
-                <p>完成所有問題並提交測驗。系統會自動計算您的分數。</p>
+                <p>Complete all questions and submit the quiz. The system will automatically calculate your score.</p>
                 {quiz.multipleAttempts && (
-                  <p>此測驗允許多次嘗試，最多 {quiz.attemptsAllowed} 次。</p>
+                  <p>This quiz allows multiple attempts, up to {quiz.attemptsAllowed} times.</p>
                 )}
               </>
             )}
@@ -517,7 +517,7 @@ const QuizPreview: React.FC = () => {
     );
   };
 
-  // 渲染多選題
+  // Render multiple choice question
   const renderMultipleChoiceQuestion = (question: Question, questionIndex: number) => {
     if (!question.choices) return null;
     
@@ -542,12 +542,12 @@ const QuizPreview: React.FC = () => {
             {userAnswers[questionIndex]?.isCorrect ? (
               <div className="text-success">
                 <FaCheckCircle className="me-2" />
-                回答正確！得分 {question.points} 分
+                Correct Answer! You earned {question.points} points
               </div>
             ) : (
               <div className="text-danger">
                 <FaTimesCircle className="me-2" />
-                回答錯誤！正確答案是：
+                Incorrect Answer! The correct answer is:
                 {question.choices.find(c => c.isCorrect)?.text}
               </div>
             )}
@@ -557,7 +557,7 @@ const QuizPreview: React.FC = () => {
     );
   };
 
-  // 渲染是非題
+  // Render true/false question
   const renderTrueFalseQuestion = (question: Question, questionIndex: number) => {
     return (
       <Form.Group className="mb-4">
@@ -567,7 +567,7 @@ const QuizPreview: React.FC = () => {
             type="radio"
             id={`question-${questionIndex}-true`}
             name={`question-${questionIndex}`}
-            label="是"
+            label="True"
             checked={userAnswers[questionIndex]?.answerBoolean === true}
             onChange={() => handleAnswerChange(questionIndex, true, 'boolean')}
             className="mb-2"
@@ -577,7 +577,7 @@ const QuizPreview: React.FC = () => {
             type="radio"
             id={`question-${questionIndex}-false`}
             name={`question-${questionIndex}`}
-            label="否"
+            label="False"
             checked={userAnswers[questionIndex]?.answerBoolean === false}
             onChange={() => handleAnswerChange(questionIndex, false, 'boolean')}
             className="mb-2"
@@ -589,12 +589,12 @@ const QuizPreview: React.FC = () => {
             {userAnswers[questionIndex]?.isCorrect ? (
               <div className="text-success">
                 <FaCheckCircle className="me-2" />
-                回答正確！得分 {question.points} 分
+                Correct Answer! You earned {question.points} points
               </div>
             ) : (
               <div className="text-danger">
                 <FaTimesCircle className="me-2" />
-                回答錯誤！正確答案是：{question.correctAnswer ? '是' : '否'}
+                Incorrect Answer! The correct answer is: {question.correctAnswer ? 'True' : 'False'}
               </div>
             )}
           </div>
@@ -603,14 +603,14 @@ const QuizPreview: React.FC = () => {
     );
   };
 
-  // 渲染填空題
+  // Render fill-in-the-blank question
   const renderFillBlankQuestion = (question: Question, questionIndex: number) => {
     return (
       <Form.Group className="mb-4">
         <Form.Label className="question-text">{question.questionText}</Form.Label>
         <Form.Control
           type="text"
-          placeholder="在此輸入您的答案"
+          placeholder="Enter your answer here"
           value={userAnswers[questionIndex]?.answerText || ''}
           onChange={(e) => handleAnswerChange(questionIndex, e.target.value, 'text')}
           disabled={showResults || attemptLimitReached || isViewingAttempt}
@@ -620,12 +620,12 @@ const QuizPreview: React.FC = () => {
             {userAnswers[questionIndex]?.isCorrect ? (
               <div className="text-success">
                 <FaCheckCircle className="me-2" />
-                回答正確！得分 {question.points} 分
+                Correct Answer! You earned {question.points} points
               </div>
             ) : (
               <div className="text-danger">
                 <FaTimesCircle className="me-2" />
-                回答錯誤！可接受的答案：
+                Incorrect Answer! Acceptable answers:
                 <ul className="mt-1 mb-0">
                   {question.correctAnswers?.map((ans, i) => (
                     <li key={i}>{ans}</li>
@@ -639,7 +639,7 @@ const QuizPreview: React.FC = () => {
     );
   };
 
-  // 根據問題類型渲染不同的問題表單
+  // Render different question form based on question type
   const renderQuestion = (question: Question, questionIndex: number) => {
     switch (question.questionType) {
       case 'MULTIPLE_CHOICE':
@@ -649,18 +649,18 @@ const QuizPreview: React.FC = () => {
       case 'FILL_BLANK':
         return renderFillBlankQuestion(question, questionIndex);
       default:
-        return <div>不支持的問題類型</div>;
+        return <div>Unsupported question type</div>;
     }
   };
 
-  // 渲染結果摘要
+  // Render results summary
   const renderResultSummary = () => {
     if (!quiz) return null;
     
     return (
       <Card className="mb-4 results-card">
         <Card.Header className="bg-primary text-white">
-          <h3 className="mb-0">測驗結果</h3>
+          <h3 className="mb-0">Quiz Results</h3>
         </Card.Header>
         <Card.Body>
           <div className="text-center mb-4">
@@ -668,7 +668,7 @@ const QuizPreview: React.FC = () => {
             <h4>{Math.round((score / quiz.totalPoints) * 100) || 0}%</h4>
           </div>
           
-          <h5>問題回答摘要</h5>
+          <h5>Question Response Summary</h5>
           <ListGroup className="question-summary">
             {quiz.questions.map((question, index) => (
               <ListGroup.Item 
@@ -680,8 +680,8 @@ const QuizPreview: React.FC = () => {
                     <div className="question-title">{index + 1}. {question.title}</div>
                     <div className="question-type-badge">
                       <Badge bg="secondary">
-                        {question.questionType === 'MULTIPLE_CHOICE' ? '選擇題' : 
-                         question.questionType === 'TRUE_FALSE' ? '是非題' : '填空題'}
+                        {question.questionType === 'MULTIPLE_CHOICE' ? 'Multiple Choice' : 
+                         question.questionType === 'TRUE_FALSE' ? 'True/False' : 'Fill-in-the-blank'}
                       </Badge>
                     </div>
                   </div>
@@ -689,12 +689,12 @@ const QuizPreview: React.FC = () => {
                     {userAnswers[index]?.isCorrect ? (
                       <>
                         <FaCheckCircle className="text-success me-2" />
-                        <span>{question.points} 分</span>
+                        <span>{question.points} points</span>
                       </>
                     ) : (
                       <>
                         <FaTimesCircle className="text-danger me-2" />
-                        <span>0 分</span>
+                        <span>0 points</span>
                       </>
                     )}
                   </div>
@@ -707,12 +707,12 @@ const QuizPreview: React.FC = () => {
           <div className="d-flex justify-content-between">
             {(isPreviewMode || (!attemptLimitReached && !isViewingAttempt)) && (
               <Button variant="primary" onClick={handleRestartQuiz}>
-                重新開始測驗
+                Restart Quiz
               </Button>
             )}
             {attemptLimitReached && !isPreviewMode && !isViewingAttempt && (
               <Alert variant="warning" className="mb-0">
-                您已達到此測驗的嘗試次數上限
+                You have reached the maximum number of attempts for this quiz
               </Alert>
             )}
             {isViewingAttempt && (
@@ -721,12 +721,12 @@ const QuizPreview: React.FC = () => {
                 setShowResults(false);
                 setShowAttemptsHistory(true);
               }}>
-                返回嘗試歷史
+                Return to Attempt History
               </Button>
             )}
             {isPreviewMode && (
               <Button variant="outline-primary" onClick={handleEditQuiz}>
-                <FaEdit className="me-1" /> 編輯測驗
+                <FaEdit className="me-1" /> Edit Quiz
               </Button>
             )}
           </div>
@@ -735,7 +735,7 @@ const QuizPreview: React.FC = () => {
     );
   };
 
-  // 渲染嘗試歷史記錄
+  // Render attempt history
   const renderAttemptsHistory = () => {
     return (
       <Modal 
@@ -745,23 +745,23 @@ const QuizPreview: React.FC = () => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>測驗嘗試歷史</Modal.Title>
+          <Modal.Title>Quiz Attempt History</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {previousAttempts.length === 0 ? (
             <Alert variant="info">
-              您還沒有任何測驗嘗試記錄。
+              You don't have any quiz attempt records yet.
             </Alert>
           ) : (
             <Table striped bordered hover responsive>
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>日期</th>
-                  <th>分數</th>
-                  <th>百分比</th>
-                  <th>狀態</th>
-                  <th>操作</th>
+                  <th>Date</th>
+                  <th>Score</th>
+                  <th>Percentage</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -773,9 +773,9 @@ const QuizPreview: React.FC = () => {
                     <td>{Math.round((attempt.score / (quiz?.totalPoints || 1)) * 100)}%</td>
                     <td>
                       {attempt.completed ? (
-                        <Badge bg="success">已完成</Badge>
+                        <Badge bg="success">Completed</Badge>
                       ) : (
-                        <Badge bg="warning">未完成</Badge>
+                        <Badge bg="warning">Incomplete</Badge>
                       )}
                     </td>
                     <td>
@@ -784,7 +784,7 @@ const QuizPreview: React.FC = () => {
                         size="sm"
                         onClick={() => viewAttempt(attempt)}
                       >
-                        查看詳情
+                        View Details
                       </Button>
                     </td>
                   </tr>
@@ -796,7 +796,7 @@ const QuizPreview: React.FC = () => {
         <Modal.Footer>
           <div className="d-flex justify-content-between w-100">
             <Button variant="secondary" onClick={() => setShowAttemptsHistory(false)}>
-              關閉
+              Close
             </Button>
             {!attemptLimitReached && (
               <Button variant="primary" onClick={() => {
@@ -805,7 +805,7 @@ const QuizPreview: React.FC = () => {
                 setShowResults(false);
                 handleRestartQuiz();
               }}>
-                開始新嘗試
+                Start New Attempt
               </Button>
             )}
           </div>
@@ -814,7 +814,7 @@ const QuizPreview: React.FC = () => {
     );
   };
 
-  // 渲染單個問題視圖（當 oneQuestionAtTime 為 true 時）
+  // Render single question view (when oneQuestionAtTime is true)
   const renderSingleQuestionView = () => {
     if (!quiz || !quiz.questions.length) return null;
     
@@ -824,8 +824,8 @@ const QuizPreview: React.FC = () => {
       <>
         <Card className="mb-4 question-card">
           <Card.Header className="d-flex justify-content-between align-items-center">
-            <h4 className="mb-0">問題 {currentQuestionIndex + 1}</h4>
-            <Badge bg="primary">{currentQuestion.points} 分</Badge>
+            <h4 className="mb-0">Question {currentQuestionIndex + 1}</h4>
+            <Badge bg="primary">{currentQuestion.points} points</Badge>
           </Card.Header>
           <Card.Body>
             {renderQuestion(currentQuestion, currentQuestionIndex)}
@@ -838,7 +838,7 @@ const QuizPreview: React.FC = () => {
             onClick={handlePreviousQuestion}
             disabled={currentQuestionIndex === 0 || showResults || attemptLimitReached || isViewingAttempt}
           >
-            <FaArrowLeft className="me-1" /> 上一題
+            <FaArrowLeft className="me-1" /> Previous
           </Button>
           
           {currentQuestionIndex < quiz.questions.length - 1 ? (
@@ -847,7 +847,7 @@ const QuizPreview: React.FC = () => {
               onClick={handleNextQuestion}
               disabled={showResults || attemptLimitReached || isViewingAttempt}
             >
-              下一題 <FaArrowRight className="ms-1" />
+              Next <FaArrowRight className="ms-1" />
             </Button>
           ) : (
             <Button 
@@ -855,7 +855,7 @@ const QuizPreview: React.FC = () => {
               onClick={handleSubmitQuiz}
               disabled={showResults || attemptLimitReached || isViewingAttempt}
             >
-              <FaSave className="me-1" /> 提交測驗
+              <FaSave className="me-1" /> Submit Quiz
             </Button>
           )}
         </div>
@@ -863,7 +863,7 @@ const QuizPreview: React.FC = () => {
     );
   };
 
-  // 渲染所有問題視圖（當 oneQuestionAtTime 為 false 時）
+  // Render all questions view (when oneQuestionAtTime is false)
   const renderAllQuestionsView = () => {
     if (!quiz) return null;
     
@@ -873,8 +873,8 @@ const QuizPreview: React.FC = () => {
           {quiz.questions.map((question, index) => (
             <Card key={index} className="mb-4 question-card">
               <Card.Header className="d-flex justify-content-between align-items-center">
-                <h4 className="mb-0">問題 {index + 1}</h4>
-                <Badge bg="primary">{question.points} 分</Badge>
+                <h4 className="mb-0">Question {index + 1}</h4>
+                <Badge bg="primary">{question.points} points</Badge>
               </Card.Header>
               <Card.Body>
                 {renderQuestion(question, index)}
@@ -889,7 +889,7 @@ const QuizPreview: React.FC = () => {
             onClick={handleSubmitQuiz}
             disabled={showResults || attemptLimitReached || isViewingAttempt}
           >
-            <FaSave className="me-1" /> 提交測驗
+            <FaSave className="me-1" /> Submit Quiz
           </Button>
         </div>
       </>
@@ -900,7 +900,7 @@ const QuizPreview: React.FC = () => {
     return (
       <Container className="my-5 text-center">
         <div className="spinner-border" role="status">
-          <span className="visually-hidden">載入中...</span>
+          <span className="visually-hidden">Loading...</span>
         </div>
       </Container>
     );
@@ -910,10 +910,10 @@ const QuizPreview: React.FC = () => {
     return (
       <Container className="my-5">
         <Alert variant="danger">
-          <Alert.Heading>發生錯誤</Alert.Heading>
+          <Alert.Heading>An Error Occurred</Alert.Heading>
           <p>{error}</p>
           <div className="d-flex justify-content-end">
-            <Button variant="outline-danger" onClick={() => navigate(-1)}>返回</Button>
+            <Button variant="outline-danger" onClick={() => navigate(-1)}>Return</Button>
           </div>
         </Alert>
       </Container>
@@ -924,10 +924,10 @@ const QuizPreview: React.FC = () => {
     return (
       <Container className="my-5">
         <Alert variant="warning">
-          <Alert.Heading>找不到測驗</Alert.Heading>
-          <p>無法找到指定的測驗。請確保測驗ID正確。</p>
+          <Alert.Heading>Quiz Not Found</Alert.Heading>
+          <p>The specified quiz could not be found. Please make sure the quiz ID is correct.</p>
           <div className="d-flex justify-content-end">
-            <Button variant="outline-warning" onClick={() => navigate(-1)}>返回</Button>
+            <Button variant="outline-warning" onClick={() => navigate(-1)}>Return</Button>
           </div>
         </Alert>
       </Container>
@@ -936,28 +936,28 @@ const QuizPreview: React.FC = () => {
 
   return (
     <Container className="my-4 quiz-preview-container">
-      {/* 測驗標題與信息區 */}
+      {/* Quiz title and information area */}
       {renderQuizInfo()}
       
-      {/* 結果摘要（提交後顯示） */}
+      {/* Results summary (shown after submission) */}
       {showResults ? (
         renderResultSummary()
       ) : (
-        /* 根據測驗設置決定顯示單個問題還是所有問題 */
+        /* Show single question or all questions based on quiz settings */
         quiz.oneQuestionAtTime ? renderSingleQuestionView() : renderAllQuestionsView()
       )}
       
-      {/* 嘗試歷史記錄對話框 */}
+      {/* Attempt history dialog */}
       {renderAttemptsHistory()}
       
-      {/* 底部編輯按鈕（僅預覽模式） */}
+      {/* Bottom edit button (preview mode only) */}
       {!showResults && isPreviewMode && (
         <div className="mt-4 text-center">
           <Button 
             variant="outline-primary" 
             onClick={handleEditQuiz}
           >
-            <FaEdit className="me-1" /> 編輯測驗
+            <FaEdit className="me-1" /> Edit Quiz
           </Button>
         </div>
       )}

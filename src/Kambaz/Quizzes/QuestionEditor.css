@@ -1,4 +1,4 @@
-/* 問題編輯器樣式 */
+/* Question editor styles */
 .question-editor, .question-preview {
   border: 1px solid #dee2e6;
   border-radius: 0.5rem;
@@ -60,7 +60,7 @@
   line-height: 1.5;
 }
 
-/* 編輯器工具欄 */
+/* Editor toolbar */
 .editor-toolbar {
   border: 1px solid #dee2e6;
   border-bottom: none;
@@ -72,7 +72,7 @@
   gap: 0.5rem;
 }
 
-/* 選項列表樣式 */
+/* Choice list styles */
 .choices-container {
   padding: 0.5rem;
   border-radius: 0.25rem;
@@ -112,13 +112,13 @@
   border-left: 3px solid #28a745;
 }
 
-/* 是非題樣式 */
+/* True/False question styles */
 .true-false-preview {
   display: flex;
   gap: 1rem;
 }
 
-/* 填空題樣式 */
+/* Fill-in-the-blank question styles */
 .fill-blank-preview {
   background-color: #f9f9f9;
   padding: 1rem;
@@ -141,7 +141,7 @@
   background-color: #f8f9fa;
 }
 
-/* 表單控制項樣式 */
+/* Form control styles */
 .form-control:focus, .form-select:focus {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
@@ -152,7 +152,7 @@
   border-color: #0d6efd;
 }
 
-/* 響應式調整 */
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .question-editor .card-header, 
   .question-preview .card-header {

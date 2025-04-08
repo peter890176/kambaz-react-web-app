@@ -32,7 +32,7 @@ import {
 import './QuizEditor.css';
 import QuestionEditor, { Question } from './QuestionEditor';
 
-// 先創建一個簡化版本的編輯器，以後可以擴展功能
+// Create a simplified version of the editor, can be expanded in the future
 
 interface Quiz {
   _id: string;
@@ -63,8 +63,8 @@ function QuizEditor() {
   const [success, setSuccess] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('details');
   
-  // 測驗基本信息
-  const [title, setTitle] = useState('未命名測驗');
+  // Quiz basic information
+  const [title, setTitle] = useState('Untitled Quiz');
   const [description, setDescription] = useState('');
   const [quizType, setQuizType] = useState('GRADED_QUIZ');
   const [timeLimit, setTimeLimit] = useState(20);
@@ -81,10 +81,10 @@ function QuizEditor() {
   const [availableDate, setAvailableDate] = useState<string>('');
   const [untilDate, setUntilDate] = useState<string>('');
   
-  // 問題列表
+  // Question list
   const [questions, setQuestions] = useState<Question[]>([]);
 
-  // 如果是編輯模式，加載現有測驗數據
+  // If in edit mode, load existing quiz data
   useEffect(() => {
     if (quizId) {
       const fetchQuiz = async () => {
@@ -93,8 +93,8 @@ function QuizEditor() {
           const response = await getQuizById(quizId);
           const quiz = response.data;
           
-          // 填充表單
-          setTitle(quiz.title || '未命名測驗');
+          // Fill the form
+          setTitle(quiz.title || 'Untitled Quiz');
           setDescription(quiz.description || '');
           setQuizType(quiz.quizType || 'GRADED_QUIZ');
           setTimeLimit(quiz.timeLimit || 20);
@@ -109,7 +109,7 @@ function QuizEditor() {
           setAccessCode(quiz.accessCode || '');
           setAssignmentGroup(quiz.assignmentGroup || 'QUIZZES');
           
-          // 處理日期格式
+          // Handle date format
           if (quiz.dueDate) {
             setDueDate(formatDateForInput(new Date(quiz.dueDate)));
           }
@@ -120,7 +120,7 @@ function QuizEditor() {
             setUntilDate(formatDateForInput(new Date(quiz.untilDate)));
           }
         } catch (err: any) {
-          setError(err.message || '獲取測驗失敗');
+          setError(err.message || 'Failed to get quiz');
         } finally {
           setLoading(false);
         }
@@ -130,7 +130,7 @@ function QuizEditor() {
     }
   }, [quizId]);
 
-  // 日期格式化函數
+  // Date formatting function
   const formatDateForInput = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -141,47 +141,47 @@ function QuizEditor() {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
-  // 添加新問題
+  // Add new question
   const addQuestion = () => {
     const newQuestion: Question = {
-      title: `問題 ${questions.length + 1}`,
+      title: `Question ${questions.length + 1}`,
       questionType: 'MULTIPLE_CHOICE',
       questionText: '',
       points: 1,
       choices: [
-        { text: '選項 1', isCorrect: false },
-        { text: '選項 2', isCorrect: false }
+        { text: 'Option 1', isCorrect: false },
+        { text: 'Option 2', isCorrect: false }
       ],
-      isEditing: true  // 新問題默認為編輯模式
+      isEditing: true  // New questions default to edit mode
     };
     
     setQuestions([...questions, newQuestion]);
   };
 
-  // 刪除問題
+  // Delete question
   const removeQuestion = (index: number) => {
     const newQuestions = [...questions];
     newQuestions.splice(index, 1);
     setQuestions(newQuestions);
   };
 
-  // 更新問題
+  // Update question
   const updateQuestion = (index: number, updatedQuestion: Question) => {
     const newQuestions = [...questions];
     newQuestions[index] = updatedQuestion;
     setQuestions(newQuestions);
   };
 
-  // 計算總分
+  // Calculate total points
   const calculateTotalPoints = (): number => {
     return questions.reduce((total, question) => total + question.points, 0);
   };
 
-  // 保存測驗
+  // Save quiz
   const handleSave = async (e: React.FormEvent, shouldPublish: boolean = false) => {
     e.preventDefault();
     
-    // 構建測驗數據
+    // Build quiz data
     const quizData = {
       title,
       description,
@@ -200,7 +200,7 @@ function QuizEditor() {
       availableDate: availableDate ? new Date(availableDate) : undefined,
       untilDate: untilDate ? new Date(untilDate) : undefined,
       questions: questions.map(q => {
-        // 刪除 isEditing 屬性，確保不會保存到數據庫
+        // Remove isEditing property to ensure it's not saved to database
         const { isEditing, ...questionData } = q;
         return questionData;
       }),
@@ -214,33 +214,33 @@ function QuizEditor() {
       let savedQuiz: Quiz | undefined;
       
       if (quizId) {
-        // 更新現有測驗
+        // Update existing quiz
         const response = await updateQuiz(quizId, quizData);
         savedQuiz = response;
-        setSuccess('測驗已成功更新');
+        setSuccess('Quiz has been successfully updated');
       } else if (cid) {
-        // 創建新測驗
+        // Create new quiz
         const response = await createQuiz(cid, quizData);
         savedQuiz = response;
-        setSuccess('測驗已成功創建');
+        setSuccess('Quiz has been successfully created');
       }
       
       if (shouldPublish && savedQuiz) {
         try {
-          // 發布測驗
+          // Publish quiz
           await publishQuiz(savedQuiz._id);
-          setSuccess(prevSuccess => `${prevSuccess} 並已發布`);
+          setSuccess(prevSuccess => `${prevSuccess} and published`);
           
-          // 導航到測驗列表頁面
+          // Navigate to quiz list page
           setTimeout(() => {
             navigate(`/Kambaz/Courses/${cid}/Quizzes`);
           }, 1000);
         } catch (pubErr) {
-          console.error("測驗發布失敗", pubErr);
-          setError('測驗已保存，但發布失敗');
+          console.error("Failed to publish quiz", pubErr);
+          setError('Quiz has been saved, but publishing failed');
         }
       } else if (!shouldPublish) {
-        // 如果不需要發布，則導航到測驗詳情頁面
+        // If no need to publish, navigate to quiz details page
         setTimeout(() => {
           if (quizId) {
             navigate(`/Kambaz/Quizzes/${quizId}`);
@@ -250,20 +250,20 @@ function QuizEditor() {
         }, 1000);
       }
     } catch (err: any) {
-      console.error("保存測驗錯誤:", err);
+      console.error("Error saving quiz:", err);
       if (err.response) {
-        setError(`保存測驗失敗 (${err.response.status}): ${err.response.data?.message || err.message}`);
+        setError(`Failed to save quiz (${err.response.status}): ${err.response.data?.message || err.message}`);
       } else if (err.request) {
-        setError(`請求未收到響應: ${err.message} - 請確認服務器是否運行`);
+        setError(`Request received no response: ${err.message} - Please confirm if the server is running`);
       } else {
-        setError(`錯誤: ${err.message}`);
+        setError(`Error: ${err.message}`);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // 取消編輯
+  // Cancel editing
   const handleCancel = () => {
     if (cid) {
       navigate(`/Kambaz/Courses/${cid}/Quizzes`);
@@ -275,7 +275,7 @@ function QuizEditor() {
   if (loading && !title) return (
     <Container className="text-center my-5">
       <div className="spinner-border" role="status">
-        <span className="visually-hidden">載入中...</span>
+        <span className="visually-hidden">Loading...</span>
       </div>
     </Container>
   );
@@ -283,9 +283,9 @@ function QuizEditor() {
   return (
     <Container className="my-4 quiz-editor-container">
       <Tab.Container activeKey={activeTab} onSelect={(key) => setActiveTab(key || 'details')}>
-        {/* 標題與主要操作按鈕 */}
+        {/* Title and main action buttons */}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="page-title">{quizId ? '編輯測驗' : '創建新測驗'}</h2>
+          <h2 className="page-title">{quizId ? 'Edit Quiz' : 'Create New Quiz'}</h2>
           <div className="action-buttons">
             <Button 
               variant="outline-secondary"
@@ -293,7 +293,7 @@ function QuizEditor() {
               onClick={handleCancel}
               disabled={loading}
             >
-              取消
+              Cancel
             </Button>
             <Button 
               variant="outline-primary"
@@ -301,23 +301,23 @@ function QuizEditor() {
               onClick={(e) => handleSave(e)}
               disabled={loading}
             >
-              <FaSave className="me-1" /> 保存
+              <FaSave className="me-1" /> Save
             </Button>
             <Button 
               variant="success"
               onClick={(e) => handleSave(e, true)}
               disabled={loading}
             >
-              <FaSave className="me-1" /> 保存並發布
+              <FaSave className="me-1" /> Save and Publish
             </Button>
           </div>
         </div>
 
-        {/* 錯誤與成功提示 */}
+        {/* Error and success alerts */}
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
 
-        {/* 測驗標題輸入 */}
+        {/* Quiz title input */}
         <Card className="mb-3">
           <Card.Body>
             <Form.Group className="mb-0">
@@ -327,43 +327,43 @@ function QuizEditor() {
                 onChange={(e) => setTitle(e.target.value)}
                 required
                 className="quiz-title-input"
-                placeholder="測驗標題"
+                placeholder="Quiz Title"
               />
             </Form.Group>
           </Card.Body>
         </Card>
 
-        {/* 選項卡導航 */}
+        {/* Tab navigation */}
         <Nav variant="tabs" className="mb-3">
           <Nav.Item>
-            <Nav.Link eventKey="details">詳細信息</Nav.Link>
+            <Nav.Link eventKey="details">Details</Nav.Link>
           </Nav.Item>
           <Nav.Item>
             <Nav.Link eventKey="questions">
-              問題 
+              Questions 
               <Badge bg="secondary" className="ms-2">{questions.length}</Badge>
             </Nav.Link>
           </Nav.Item>
         </Nav>
 
-        {/* 選項卡內容 */}
+        {/* Tab content */}
         <Tab.Content>
-          {/* 詳細信息選項卡 */}
+          {/* Details tab */}
           <Tab.Pane eventKey="details">
             <Form>
               <Card className="mb-4">
                 <Card.Body>
-                  {/* 測驗說明 - WYSIWYG 編輯器 */}
+                  {/* Quiz description - WYSIWYG editor */}
                   <Form.Group className="mb-4">
-                    <Form.Label>測驗說明</Form.Label>
+                    <Form.Label>Quiz Description</Form.Label>
                     <div className="editor-toolbar">
                       <div className="btn-group">
-                        <button type="button" className="btn btn-sm btn-outline-secondary">編輯</button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary">查看</button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary">插入</button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary">格式</button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary">工具</button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary">表格</button>
+                        <button type="button" className="btn btn-sm btn-outline-secondary">Edit</button>
+                        <button type="button" className="btn btn-sm btn-outline-secondary">View</button>
+                        <button type="button" className="btn btn-sm btn-outline-secondary">Insert</button>
+                        <button type="button" className="btn btn-sm btn-outline-secondary">Format</button>
+                        <button type="button" className="btn btn-sm btn-outline-secondary">Tools</button>
+                        <button type="button" className="btn btn-sm btn-outline-secondary">Table</button>
                       </div>
                       <div className="btn-group ms-2">
                         <button type="button" className="btn btn-sm btn-outline-secondary">B</button>
@@ -376,40 +376,40 @@ function QuizEditor() {
                       rows={4} 
                       value={description} 
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="輸入測驗說明..."
+                      placeholder="Enter quiz description..."
                     />
                   </Form.Group>
 
                   <Row className="mb-3">
                     <Col md={6}>
-                      {/* 測驗類型 */}
+                      {/* Quiz type */}
                       <Form.Group className="mb-3">
                         <Form.Label>
                           <FaLayerGroup className="me-2" />
-                          測驗類型
+                          Quiz Type
                         </Form.Label>
                         <Form.Select 
                           value={quizType} 
                           onChange={(e) => setQuizType(e.target.value)}
                         >
-                          <option value="GRADED_QUIZ">計分測驗</option>
-                          <option value="PRACTICE_QUIZ">練習測驗</option>
-                          <option value="GRADED_SURVEY">計分問卷</option>
-                          <option value="UNGRADED_SURVEY">不計分問卷</option>
+                          <option value="GRADED_QUIZ">Graded Quiz</option>
+                          <option value="PRACTICE_QUIZ">Practice Quiz</option>
+                          <option value="GRADED_SURVEY">Graded Survey</option>
+                          <option value="UNGRADED_SURVEY">Ungraded Survey</option>
                         </Form.Select>
                       </Form.Group>
                     </Col>
                     <Col md={6}>
-                      {/* 總分數 */}
+                      {/* Total points */}
                       <Form.Group className="mb-3">
-                        <Form.Label>總分數</Form.Label>
+                        <Form.Label>Total Points</Form.Label>
                         <Form.Control 
                           type="text" 
                           value={calculateTotalPoints()}
                           disabled
                         />
                         <Form.Text className="text-muted">
-                          總分數是所有問題分數的總和
+                          Total points is the sum of all question points
                         </Form.Text>
                       </Form.Group>
                     </Col>
@@ -417,38 +417,38 @@ function QuizEditor() {
 
                   <Row className="mb-3">
                     <Col md={6}>
-                      {/* 作業分組 */}
+                      {/* Assignment group */}
                       <Form.Group className="mb-3">
                         <Form.Label>
                           <FaLayerGroup className="me-2" />
-                          作業分組
+                          Assignment Group
                         </Form.Label>
                         <Form.Select 
                           value={assignmentGroup} 
                           onChange={(e) => setAssignmentGroup(e.target.value)}
                         >
-                          <option value="QUIZZES">測驗</option>
-                          <option value="EXAMS">考試</option>
-                          <option value="ASSIGNMENTS">作業</option>
-                          <option value="PROJECT">專案</option>
+                          <option value="QUIZZES">Quizzes</option>
+                          <option value="EXAMS">Exams</option>
+                          <option value="ASSIGNMENTS">Assignments</option>
+                          <option value="PROJECT">Projects</option>
                         </Form.Select>
                       </Form.Group>
                     </Col>
                     <Col md={6}>
-                      {/* 訪問碼 */}
+                      {/* Access code */}
                       <Form.Group className="mb-3">
                         <Form.Label>
                           <FaKey className="me-2" />
-                          訪問碼
+                          Access Code
                         </Form.Label>
                         <Form.Control 
                           type="text" 
                           value={accessCode} 
                           onChange={(e) => setAccessCode(e.target.value)}
-                          placeholder="未設置"
+                          placeholder="Not set"
                         />
                         <Form.Text className="text-muted">
-                          可選：需要學生輸入的訪問碼
+                          Optional: Access code that students need to enter
                         </Form.Text>
                       </Form.Group>
                     </Col>
@@ -458,11 +458,11 @@ function QuizEditor() {
 
                   <Row className="mb-3">
                     <Col md={6}>
-                      {/* 時間限制 */}
+                      {/* Time limit */}
                       <Form.Group className="mb-3">
                         <Form.Label>
                           <FaClock className="me-2" />
-                          時間限制
+                          Time Limit
                         </Form.Label>
                         <InputGroup>
                           <Form.Control 
@@ -471,28 +471,28 @@ function QuizEditor() {
                             value={timeLimit} 
                             onChange={(e) => setTimeLimit(parseInt(e.target.value) || 20)}
                           />
-                          <InputGroup.Text>分鐘</InputGroup.Text>
+                          <InputGroup.Text>minutes</InputGroup.Text>
                         </InputGroup>
                       </Form.Group>
                     </Col>
                     <Col md={6}>
-                      {/* 隨機排序答案 */}
+                      {/* Shuffle answers */}
                       <Form.Group className="mb-3 pt-2">
                         <Form.Check 
                           type="switch"
                           id="shuffle-answers"
-                          label={<><FaRandom className="me-2" />隨機排序答案</>}
+                          label={<><FaRandom className="me-2" />Shuffle Answers</>}
                           checked={shuffleAnswers}
                           onChange={(e) => setShuffleAnswers(e.target.checked)}
                         />
                       </Form.Group>
 
-                      {/* 一次顯示一個問題 */}
+                      {/* One question at a time */}
                       <Form.Group className="mb-3">
                         <Form.Check 
                           type="switch"
                           id="one-question-at-time"
-                          label="一次顯示一個問題"
+                          label="One Question at a Time"
                           checked={oneQuestionAtTime}
                           onChange={(e) => setOneQuestionAtTime(e.target.checked)}
                         />
@@ -502,12 +502,12 @@ function QuizEditor() {
 
                   <Row className="mb-3">
                     <Col md={6}>
-                      {/* 允許多次嘗試 */}
+                      {/* Allow multiple attempts */}
                       <Form.Group className="mb-3">
                         <Form.Check 
                           type="switch"
                           id="multiple-attempts"
-                          label="允許多次嘗試"
+                          label="Allow Multiple Attempts"
                           checked={multipleAttempts}
                           onChange={(e) => setMultipleAttempts(e.target.checked)}
                         />
@@ -520,18 +520,18 @@ function QuizEditor() {
                               value={attemptsAllowed} 
                               onChange={(e) => setAttemptsAllowed(parseInt(e.target.value) || 1)}
                             />
-                            <InputGroup.Text>次嘗試</InputGroup.Text>
+                            <InputGroup.Text>attempts</InputGroup.Text>
                           </InputGroup>
                         )}
                       </Form.Group>
                     </Col>
                     <Col md={6}>
-                      {/* 顯示正確答案 */}
+                      {/* Show correct answers */}
                       <Form.Group className="mb-3">
                         <Form.Check 
                           type="switch"
                           id="show-correct-answers"
-                          label={<><FaEye className="me-2" />顯示正確答案</>}
+                          label={<><FaEye className="me-2" />Show Correct Answers</>}
                           checked={showCorrectAnswers}
                           onChange={(e) => setShowCorrectAnswers(e.target.checked)}
                         />
@@ -541,24 +541,24 @@ function QuizEditor() {
 
                   <Row className="mb-3">
                     <Col md={6}>
-                      {/* 要求網路攝影機 */}
+                      {/* Require webcam */}
                       <Form.Group className="mb-3">
                         <Form.Check 
                           type="switch"
                           id="webcam-required"
-                          label={<><FaCamera className="me-2" />要求網路攝影機</>}
+                          label={<><FaCamera className="me-2" />Require Webcam</>}
                           checked={webcamRequired}
                           onChange={(e) => setWebcamRequired(e.target.checked)}
                         />
                       </Form.Group>
                     </Col>
                     <Col md={6}>
-                      {/* 回答後鎖定問題 */}
+                      {/* Lock questions after answering */}
                       <Form.Group className="mb-3">
                         <Form.Check 
                           type="switch"
                           id="lock-questions"
-                          label={<><FaLock className="me-2" />回答後鎖定問題</>}
+                          label={<><FaLock className="me-2" />Lock Questions After Answering</>}
                           checked={lockQuestionsAfterAnswering}
                           onChange={(e) => setLockQuestionsAfterAnswering(e.target.checked)}
                         />
@@ -568,14 +568,14 @@ function QuizEditor() {
 
                   <hr className="my-4" />
 
-                  <h5 className="mb-3">時間設置</h5>
+                  <h5 className="mb-3">Time Settings</h5>
                   <Row>
                     <Col md={4}>
-                      {/* 截止日期 */}
+                      {/* Due date */}
                       <Form.Group className="mb-3">
                         <Form.Label>
                           <FaCalendarAlt className="me-2" />
-                          截止日期
+                          Due Date
                         </Form.Label>
                         <Form.Control 
                           type="datetime-local" 
@@ -585,11 +585,11 @@ function QuizEditor() {
                       </Form.Group>
                     </Col>
                     <Col md={4}>
-                      {/* 開放日期 */}
+                      {/* Available from date */}
                       <Form.Group className="mb-3">
                         <Form.Label>
                           <FaCalendarAlt className="me-2" />
-                          開放日期
+                          Available From
                         </Form.Label>
                         <Form.Control 
                           type="datetime-local" 
@@ -599,11 +599,11 @@ function QuizEditor() {
                       </Form.Group>
                     </Col>
                     <Col md={4}>
-                      {/* 結束日期 */}
+                      {/* Until date */}
                       <Form.Group className="mb-3">
                         <Form.Label>
                           <FaCalendarAlt className="me-2" />
-                          結束日期
+                          Available Until
                         </Form.Label>
                         <Form.Control 
                           type="datetime-local" 
@@ -618,21 +618,21 @@ function QuizEditor() {
             </Form>
           </Tab.Pane>
 
-          {/* 問題選項卡 */}
+          {/* Questions tab */}
           <Tab.Pane eventKey="questions">
             <Card>
               <Card.Body>
                 <div className="d-flex justify-content-between align-items-center mb-4">
                   <div>
-                    <h4 className="mb-0">測驗問題</h4>
-                    <div className="text-muted">總分: {calculateTotalPoints()} 分</div>
+                    <h4 className="mb-0">Quiz Questions</h4>
+                    <div className="text-muted">Total: {calculateTotalPoints()} points</div>
                   </div>
                   <Button 
                     variant="primary" 
                     onClick={addQuestion}
                     className="d-flex align-items-center"
                   >
-                    <FaPlus className="me-1" /> 新增問題
+                    <FaPlus className="me-1" /> Add Question
                   </Button>
                 </div>
 
@@ -641,8 +641,8 @@ function QuizEditor() {
                     <div className="mb-3">
                       <FaPlus style={{ fontSize: '3rem', opacity: 0.3 }} />
                     </div>
-                    <h5>尚無問題</h5>
-                    <p className="text-muted">點擊「新增問題」按鈕創建第一個問題</p>
+                    <h5>No Questions Yet</h5>
+                    <p className="text-muted">Click the "Add Question" button to create your first question</p>
                   </div>
                 ) : (
                   <div className="questions-list">
@@ -664,14 +664,14 @@ function QuizEditor() {
         </Tab.Content>
       </Tab.Container>
 
-      {/* 底部操作按鈕 */}
+      {/* Bottom action buttons */}
       <div className="d-flex justify-content-between mt-4">
         <Button 
           variant="outline-secondary"
           onClick={handleCancel}
           disabled={loading}
         >
-          取消
+          Cancel
         </Button>
         <div>
           <Button 
@@ -680,14 +680,14 @@ function QuizEditor() {
             onClick={(e) => handleSave(e)}
             disabled={loading}
           >
-            <FaSave className="me-1" /> 保存
+            <FaSave className="me-1" /> Save
           </Button>
           <Button 
             variant="success"
             onClick={(e) => handleSave(e, true)}
             disabled={loading}
           >
-            <FaSave className="me-1" /> 保存並發布
+            <FaSave className="me-1" /> Save and Publish
           </Button>
         </div>
       </div>

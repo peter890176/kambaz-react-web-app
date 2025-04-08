@@ -1,4 +1,4 @@
-/* 測驗詳情頁面樣式 */
+/* Quiz details page styles */
 .quiz-details-container {
   max-width: 1000px;
   margin: 0 auto;
@@ -21,7 +21,7 @@
   margin-right: 0.5rem;
 }
 
-/* 卡片樣式 */
+/* Card styles */
 .quiz-details-card {
   border: none;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -34,7 +34,7 @@
   padding: 1rem;
 }
 
-/* 屬性表格樣式 */
+/* Properties table styles */
 .section-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -60,7 +60,7 @@
   background-color: #f8f9fa;
 }
 
-/* 問題列表樣式 */
+/* Question list styles */
 .question-list {
   margin-top: 1rem;
 }
@@ -94,13 +94,13 @@
   margin-left: 1rem;
 }
 
-/* 通用徽章樣式 */
+/* General badge styles */
 .badge {
   font-weight: 500;
   padding: 0.5em 0.75em;
 }
 
-/* 響應式調整 */
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .property-name {
     width: 150px;

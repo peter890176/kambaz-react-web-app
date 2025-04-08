@@ -1,10 +1,10 @@
-/* 測驗預覽頁面樣式 */
+/* Quiz preview page styles */
 .quiz-preview-container {
   max-width: 800px;
   margin: 0 auto;
 }
 
-/* 測驗信息卡片 */
+/* Quiz info card */
 .quiz-info-card {
   border: none;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -48,7 +48,7 @@
   color: #dc3545;
 }
 
-/* 問題卡片 */
+/* Question card */
 .question-card {
   border: none;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -70,7 +70,7 @@
   line-height: 1.5;
 }
 
-/* 結果反饋 */
+/* Result feedback */
 .result-feedback {
   background-color: #f8f9fa;
   border-radius: 0.375rem;
@@ -87,7 +87,7 @@
   background-color: rgba(220, 53, 69, 0.05);
 }
 
-/* 結果卡片 */
+/* Results card */
 .results-card {
   border: none;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -118,7 +118,7 @@
   margin-top: 0.25rem;
 }
 
-/* 嘗試歷史記錄模態框 */
+/* Attempts history modal */
 .attempts-history-modal .modal-header {
   background-color: #f8f9fa;
   border-bottom: 1px solid #dee2e6;
@@ -148,7 +148,7 @@
   font-size: 0.75rem;
 }
 
-/* 通用樣式 */
+/* Common styles */
 .badge {
   font-weight: 500;
   padding: 0.5em 0.75em;
@@ -164,7 +164,7 @@
   margin-right: 0.5rem;
 }
 
-/* 警告提示樣式 */
+/* Warning alert styles */
 .attempts-limit-warning {
   background-color: #fff3cd;
   color: #856404;
@@ -180,7 +180,7 @@
   color: #856404;
 }
 
-/* 響應式調整 */
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .quiz-info-card .card-body {
     padding: 1rem;

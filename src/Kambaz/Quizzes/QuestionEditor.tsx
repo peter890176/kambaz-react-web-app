@@ -19,7 +19,7 @@ import {
 } from 'react-icons/fa';
 import './QuestionEditor.css';
 
-// 問題類型接口
+// Question type interface
 export interface Choice {
   id?: string;
   text: string;
@@ -57,23 +57,23 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(isNew || question.isEditing || false);
   const [originalQuestion, setOriginalQuestion] = useState<Question>({...question});
 
-  // 當外部問題數據變化時更新本地狀態
+  // Update local state when external question data changes
   useEffect(() => {
     setEditingQuestion({...question});
     setOriginalQuestion({...question});
     setIsEditing(isNew || question.isEditing || false);
   }, [question, isNew]);
 
-  // 處理問題欄位變更
+  // Handle question field changes
   const handleQuestionChange = (field: string, value: any) => {
     const updatedQuestion = { ...editingQuestion, [field]: value };
     
-    // 如果更改了問題類型，需要重置答案相關字段
+    // If question type is changed, reset answer-related fields
     if (field === 'questionType') {
       if (value === 'MULTIPLE_CHOICE') {
         updatedQuestion.choices = [
-          { id: Date.now().toString(), text: '選項 1', isCorrect: false },
-          { id: Date.now().toString() + '1', text: '選項 2', isCorrect: false }
+          { id: Date.now().toString(), text: 'Option 1', isCorrect: false },
+          { id: Date.now().toString() + '1', text: 'Option 2', isCorrect: false }
         ];
         delete updatedQuestion.correctAnswer;
         delete updatedQuestion.correctAnswers;
@@ -91,14 +91,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
     setEditingQuestion(updatedQuestion);
   };
 
-  // 處理選項變更 (多選題)
+  // Handle choice changes (multiple choice)
   const handleChoiceChange = (choiceIndex: number, field: string, value: any) => {
     if (!editingQuestion.choices) return;
     
     const newChoices = [...editingQuestion.choices];
     
     if (field === 'isCorrect') {
-      // 單選邏輯：確保只有一個選項被選中
+      // Single choice logic: ensure only one option is selected
       newChoices.forEach((choice, i) => {
         if (i === choiceIndex) {
           choice.isCorrect = true;
@@ -107,20 +107,20 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
         }
       });
     } else {
-      // @ts-ignore: 動態屬性賦值
+      // @ts-ignore: dynamic property assignment
       newChoices[choiceIndex][field] = value;
     }
     
     setEditingQuestion({ ...editingQuestion, choices: newChoices });
   };
 
-  // 添加新選項 (多選題)
+  // Add new option (multiple choice)
   const addChoice = () => {
     if (!editingQuestion.choices) return;
     
     const newChoice: Choice = {
       id: Date.now().toString(),
-      text: `選項 ${editingQuestion.choices.length + 1}`,
+      text: `Option ${editingQuestion.choices.length + 1}`,
       isCorrect: false
     };
     
@@ -130,14 +130,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
     });
   };
 
-  // 刪除選項 (多選題)
+  // Delete option (multiple choice)
   const removeChoice = (choiceIndex: number) => {
     if (!editingQuestion.choices) return;
     
     const newChoices = [...editingQuestion.choices];
     newChoices.splice(choiceIndex, 1);
     
-    // 如果刪除了正確答案，自動將第一個選項設為正確答案
+    // If correct answer is deleted, automatically set the first option as correct
     const hasCorrectChoice = newChoices.some(choice => choice.isCorrect);
     if (!hasCorrectChoice && newChoices.length > 0) {
       newChoices[0].isCorrect = true;
@@ -146,7 +146,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
     setEditingQuestion({ ...editingQuestion, choices: newChoices });
   };
 
-  // 處理填空題答案變更
+  // Handle fill-in-the-blank answer changes
   const handleCorrectAnswerChange = (answerIndex: number, value: string) => {
     if (!editingQuestion.correctAnswers) return;
     
@@ -156,7 +156,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
     setEditingQuestion({ ...editingQuestion, correctAnswers: newAnswers });
   };
 
-  // 添加填空題新答案
+  // Add new fill-in-the-blank answer
   const addCorrectAnswer = () => {
     if (!editingQuestion.correctAnswers) return;
     
@@ -166,7 +166,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
     });
   };
 
-  // 刪除填空題答案
+  // Delete fill-in-the-blank answer
   const removeCorrectAnswer = (answerIndex: number) => {
     if (!editingQuestion.correctAnswers) return;
     
@@ -176,9 +176,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
     setEditingQuestion({ ...editingQuestion, correctAnswers: newAnswers });
   };
 
-  // 儲存問題
+  // Save question
   const saveQuestion = () => {
-    // 確保至少有一個正確選項 (多選題)
+    // Ensure at least one correct option (multiple choice)
     if (editingQuestion.questionType === 'MULTIPLE_CHOICE' && 
         editingQuestion.choices && 
         !editingQuestion.choices.some(choice => choice.isCorrect)) {
@@ -187,38 +187,38 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
       }
     }
     
-    // 更新問題，關閉編輯模式
+    // Update question, close edit mode
     onUpdate(index, { ...editingQuestion, isEditing: false });
     setIsEditing(false);
   };
 
-  // 取消編輯
+  // Cancel editing
   const cancelEdit = () => {
-    // 恢復原始問題數據
+    // Restore original question data
     setEditingQuestion({...originalQuestion});
     
-    // 如果是新問題且取消，則刪除
+    // If it's a new question and canceled, delete it
     if (isNew) {
       onRemove(index);
     } else {
-      // 關閉編輯模式
+      // Close edit mode
       onUpdate(index, { ...originalQuestion, isEditing: false });
       setIsEditing(false);
     }
   };
 
-  // 開始編輯
+  // Start editing
   const startEditing = () => {
     setOriginalQuestion({...editingQuestion});
     setIsEditing(true);
     onUpdate(index, { ...editingQuestion, isEditing: true });
   };
 
-  // 渲染多選題編輯器
+  // Render multiple choice editor
   const renderMultipleChoiceEditor = () => {
     return (
       <div className="mt-3">
-        <Form.Label className="fw-bold">選項：</Form.Label>
+        <Form.Label className="fw-bold">Options:</Form.Label>
         <div className="choices-container">
           {editingQuestion.choices && editingQuestion.choices.map((choice, choiceIndex) => (
             <InputGroup key={choice.id || choiceIndex} className="mb-2">
@@ -226,12 +226,12 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                 checked={choice.isCorrect}
                 onChange={() => handleChoiceChange(choiceIndex, 'isCorrect', true)}
                 name={`choice-correct-${index}`}
-                aria-label="選擇為正確答案"
+                aria-label="Select as correct answer"
               />
               <Form.Control
                 value={choice.text}
                 onChange={(e) => handleChoiceChange(choiceIndex, 'text', e.target.value)}
-                placeholder={`選項 ${choiceIndex + 1}`}
+                placeholder={`Option ${choiceIndex + 1}`}
               />
               <Button 
                 variant="outline-danger"
@@ -248,24 +248,24 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             className="mt-2"
             onClick={addChoice}
           >
-            <FaPlus className="me-1" /> 添加選項
+            <FaPlus className="me-1" /> Add Option
           </Button>
         </div>
       </div>
     );
   };
 
-  // 渲染是非題編輯器
+  // Render true/false editor
   const renderTrueFalseEditor = () => {
     return (
       <div className="mt-3">
-        <Form.Label className="fw-bold">正確答案：</Form.Label>
+        <Form.Label className="fw-bold">Correct Answer:</Form.Label>
         <div>
           <Form.Check
             type="radio"
             id={`true-${index}`}
             name={`true-false-${index}`}
-            label="是"
+            label="True"
             inline
             checked={editingQuestion.correctAnswer === true}
             onChange={() => handleQuestionChange('correctAnswer', true)}
@@ -275,7 +275,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             type="radio"
             id={`false-${index}`}
             name={`true-false-${index}`}
-            label="否"
+            label="False"
             inline
             checked={editingQuestion.correctAnswer === false}
             onChange={() => handleQuestionChange('correctAnswer', false)}
@@ -285,12 +285,12 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
     );
   };
 
-  // 渲染填空題編輯器
+  // Render fill-in-the-blank editor
   const renderFillBlankEditor = () => {
     return (
       <div className="mt-3">
-        <Form.Label className="fw-bold">可接受的答案：</Form.Label>
-        <p className="text-muted small">學生的回答必須與其中一個可接受的答案完全匹配才能獲得分數。</p>
+        <Form.Label className="fw-bold">Acceptable Answers:</Form.Label>
+        <p className="text-muted small">Student's response must exactly match one of the acceptable answers to receive credit.</p>
         <div className="answers-container">
           {editingQuestion.correctAnswers && editingQuestion.correctAnswers.map((answer, answerIndex) => (
             <InputGroup key={answerIndex} className="mb-2">
@@ -298,7 +298,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
               <Form.Control
                 value={answer}
                 onChange={(e) => handleCorrectAnswerChange(answerIndex, e.target.value)}
-                placeholder="輸入可接受的答案"
+                placeholder="Enter acceptable answer"
               />
               <Button 
                 variant="outline-danger"
@@ -315,14 +315,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             className="mt-2"
             onClick={addCorrectAnswer}
           >
-            <FaPlus className="me-1" /> 添加答案選項
+            <FaPlus className="me-1" /> Add Answer Option
           </Button>
         </div>
       </div>
     );
   };
 
-  // 根據問題類型渲染相應的編輯器
+  // Render the appropriate editor based on question type
   const renderQuestionTypeEditor = () => {
     switch (editingQuestion.questionType) {
       case 'MULTIPLE_CHOICE':
@@ -336,7 +336,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
     }
   };
 
-  // 渲染問題預覽（非編輯模式）
+  // Render question preview (non-edit mode)
   const renderQuestionPreview = () => {
     return (
       <Card className="question-preview">
@@ -346,10 +346,10 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             <span className="question-title ms-2">{question.title}</span>
           </div>
           <div>
-            <Badge bg="primary" className="me-2">{question.points} 分</Badge>
+            <Badge bg="primary" className="me-2">{question.points} points</Badge>
             <Badge bg="secondary" className="me-2">
-              {question.questionType === 'MULTIPLE_CHOICE' ? '選擇題' : 
-               question.questionType === 'TRUE_FALSE' ? '是非題' : '填空題'}
+              {question.questionType === 'MULTIPLE_CHOICE' ? 'Multiple Choice' : 
+               question.questionType === 'TRUE_FALSE' ? 'True/False' : 'Fill in the Blank'}
             </Badge>
             <ButtonGroup size="sm">
               <Button variant="outline-primary" onClick={startEditing}>
@@ -379,18 +379,18 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             <div className="true-false-preview">
               <div className={`choice-item ${question.correctAnswer ? 'correct-choice' : ''}`}>
                 <span className="choice-marker">{question.correctAnswer ? <FaCheck className="text-success" /> : <FaTimes className="text-muted" />}</span>
-                <span className="choice-text">是</span>
+                <span className="choice-text">True</span>
               </div>
               <div className={`choice-item ${!question.correctAnswer ? 'correct-choice' : ''}`}>
                 <span className="choice-marker">{!question.correctAnswer ? <FaCheck className="text-success" /> : <FaTimes className="text-muted" />}</span>
-                <span className="choice-text">否</span>
+                <span className="choice-text">False</span>
               </div>
             </div>
           )}
           
           {question.questionType === 'FILL_BLANK' && question.correctAnswers && (
             <div className="fill-blank-preview">
-              <p>正確答案：</p>
+              <p>Correct Answers:</p>
               <ul className="answers-list">
                 {question.correctAnswers.map((answer, i) => (
                   <li key={i}>{answer}</li>
@@ -412,7 +412,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             type="text"
             value={editingQuestion.title}
             onChange={(e) => handleQuestionChange('title', e.target.value)}
-            placeholder="問題標題"
+            placeholder="Question Title"
             className="question-title-input ms-2"
           />
         </div>
@@ -424,9 +424,9 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
                 min="0"
                 value={editingQuestion.points}
                 onChange={(e) => handleQuestionChange('points', parseInt(e.target.value) || 0)}
-                aria-label="問題分數"
+                aria-label="Question points"
               />
-              <InputGroup.Text>分</InputGroup.Text>
+              <InputGroup.Text>points</InputGroup.Text>
             </InputGroup>
           </Form.Group>
           <Form.Select
@@ -435,23 +435,23 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             className="question-type-select me-2"
             style={{ width: 'auto' }}
           >
-            <option value="MULTIPLE_CHOICE">選擇題</option>
-            <option value="TRUE_FALSE">是非題</option>
-            <option value="FILL_BLANK">填空題</option>
+            <option value="MULTIPLE_CHOICE">Multiple Choice</option>
+            <option value="TRUE_FALSE">True/False</option>
+            <option value="FILL_BLANK">Fill in the Blank</option>
           </Form.Select>
         </div>
       </Card.Header>
       <Card.Body>
         <Form.Group className="mb-3">
-          <Form.Label className="fw-bold">問題文字：</Form.Label>
+          <Form.Label className="fw-bold">Question Text:</Form.Label>
           <div className="editor-toolbar">
             <div className="btn-group">
-              <button type="button" className="btn btn-sm btn-outline-secondary">編輯</button>
-              <button type="button" className="btn btn-sm btn-outline-secondary">查看</button>
-              <button type="button" className="btn btn-sm btn-outline-secondary">插入</button>
-              <button type="button" className="btn btn-sm btn-outline-secondary">格式</button>
-              <button type="button" className="btn btn-sm btn-outline-secondary">工具</button>
-              <button type="button" className="btn btn-sm btn-outline-secondary">表格</button>
+              <button type="button" className="btn btn-sm btn-outline-secondary">Edit</button>
+              <button type="button" className="btn btn-sm btn-outline-secondary">View</button>
+              <button type="button" className="btn btn-sm btn-outline-secondary">Insert</button>
+              <button type="button" className="btn btn-sm btn-outline-secondary">Format</button>
+              <button type="button" className="btn btn-sm btn-outline-secondary">Tools</button>
+              <button type="button" className="btn btn-sm btn-outline-secondary">Table</button>
             </div>
             <div className="btn-group ms-2">
               <button type="button" className="btn btn-sm btn-outline-secondary">B</button>
@@ -464,7 +464,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             rows={3}
             value={editingQuestion.questionText}
             onChange={(e) => handleQuestionChange('questionText', e.target.value)}
-            placeholder="輸入問題內容..."
+            placeholder="Enter question content..."
           />
         </Form.Group>
 
@@ -476,13 +476,13 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             className="me-2"
             onClick={cancelEdit}
           >
-            取消
+            Cancel
           </Button>
           <Button 
             variant="danger" 
             onClick={saveQuestion}
           >
-            {isNew ? '新增問題' : '更新問題'}
+            {isNew ? 'Add Question' : 'Update Question'}
           </Button>
         </div>
       </Card.Body>

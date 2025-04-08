@@ -1,9 +1,9 @@
-/* 測驗列表樣式 */
+/* Quiz list styles */
 .quiz-list-container {
   margin-top: 20px;
 }
 
-/* 頁面標題樣式 */
+/* Page title styles */
 .quizzes-header {
   display: flex;
   justify-content: space-between;
@@ -19,7 +19,7 @@
   color: #333;
 }
 
-/* 測驗項目樣式 */
+/* Quiz item styles */
 .quiz-item {
   border-left: 5px solid #f0f0f0;
   transition: all 0.2s ease;
@@ -39,7 +39,7 @@
   border-left-color: #dc3545;
 }
 
-/* 測驗狀態圖標 */
+/* Quiz status icon */
 .quiz-status-icon {
   font-size: 1.2rem;
   cursor: pointer;
@@ -64,7 +64,7 @@
   color: #dc3545;
 }
 
-/* 測驗標題 */
+/* Quiz title */
 .quiz-title {
   font-weight: 600;
   cursor: pointer;
@@ -77,7 +77,7 @@
   text-decoration: underline;
 }
 
-/* 測驗詳情 */
+/* Quiz details */
 .quiz-details {
   display: flex;
   flex-wrap: wrap;
@@ -92,7 +92,7 @@
   gap: 5px;
 }
 
-/* 上下文選單按鈕 */
+/* Context menu button */
 .quiz-actions .dropdown-toggle {
   background: transparent;
   border: none;
@@ -110,7 +110,7 @@
   display: none;
 }
 
-/* 空狀態卡片 */
+/* Empty state card */
 .empty-state-card {
   padding: 50px 20px;
   text-align: center;
@@ -125,19 +125,19 @@
   margin-bottom: 15px;
 }
 
-/* 刪除確認對話框 */
+/* Delete confirmation dialog */
 .delete-confirm-modal .modal-header {
   border-bottom-color: #f8d7da;
   background-color: #f8d7da;
   color: #842029;
 }
 
-/* 排序下拉菜單 */
+/* Sort dropdown menu */
 .sort-dropdown {
   min-width: 180px;
 }
 
-/* 新增測驗按鈕 */
+/* Add quiz button */
 .add-quiz-btn {
   background-color: #d63384;
   border-color: #d63384;
@@ -148,7 +148,7 @@
   border-color: #c02a70;
 }
 
-/* 響應式調整 */
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .quiz-details {
     flex-direction: column;

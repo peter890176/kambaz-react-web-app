@@ -18,24 +18,24 @@ function QuizAttempt() {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
 
-  // 檢查參數有效性
+  // Check parameter validity
   useEffect(() => {
     if (!quizId) {
-      setError('缺少測驗ID參數');
+      setError('Missing quiz ID parameter');
       setLoading(false);
       return;
     }
     
     if (!attemptId) {
-      setError('缺少嘗試ID參數，無法開始測驗');
+      setError('Missing attempt ID parameter, cannot start quiz');
       setLoading(false);
       return;
     }
     
-    console.log(`開始測驗嘗試，測驗ID: ${quizId}, 嘗試ID: ${attemptId}`);
+    console.log(`Starting quiz attempt, Quiz ID: ${quizId}, Attempt ID: ${attemptId}`);
   }, [quizId, attemptId]);
 
-  // 獲取測驗詳情
+  // Get quiz details
   useEffect(() => {
     if (!quizId || !attemptId) return;
     
@@ -44,12 +44,12 @@ function QuizAttempt() {
         setLoading(true);
         const response = await getQuizById(quizId);
         if (!response || !response.data) {
-          throw new Error('獲取測驗數據失敗');
+          throw new Error('Failed to get quiz data');
         }
         
         setQuiz(response.data);
         
-        // 初始化答案數組
+        // Initialize answers array
         const initialAnswers = response.data.questions.map((q: any) => ({
           question: q._id,
           answerChoice: '',
@@ -59,13 +59,13 @@ function QuizAttempt() {
         
         setAnswers(initialAnswers);
         
-        // 設置倒計時
+        // Set countdown
         setTimeLeft(response.data.timeLimit * 60);
-        console.log(`測驗載入成功，包含 ${response.data.questions.length} 個問題，時間限制 ${response.data.timeLimit} 分鐘`);
+        console.log(`Quiz loaded successfully, contains ${response.data.questions.length} questions, time limit ${response.data.timeLimit} minutes`);
       } catch (err: any) {
-        const errorMessage = err.response?.data?.message || err.message || '獲取測驗失敗';
+        const errorMessage = err.response?.data?.message || err.message || 'Failed to get quiz';
         setError(errorMessage);
-        console.error('獲取測驗失敗:', err);
+        console.error('Failed to get quiz:', err);
       } finally {
         setLoading(false);
       }
@@ -74,7 +74,7 @@ function QuizAttempt() {
     fetchQuiz();
   }, [quizId, attemptId]);
 
-  // 倒計時
+  // Countdown
   useEffect(() => {
     if (!quiz || timeLeft <= 0) return;
     
@@ -82,7 +82,7 @@ function QuizAttempt() {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          // 自動提交
+          // Auto submit
           handleSubmit();
           return 0;
         }
@@ -93,14 +93,14 @@ function QuizAttempt() {
     return () => clearInterval(timer);
   }, [quiz, timeLeft]);
 
-  // 格式化時間
+  // Format time
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // 更新答案
+  // Update answer
   const updateAnswer = (value: any, type: string) => {
     const newAnswers = [...answers];
     if (type === 'choice') {
@@ -113,41 +113,41 @@ function QuizAttempt() {
     setAnswers(newAnswers);
   };
 
-  // 下一題
+  // Next question
   const nextQuestion = () => {
     if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     }
   };
 
-  // 上一題
+  // Previous question
   const prevQuestion = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1);
     }
   };
 
-  // 提交測驗
+  // Submit quiz
   const handleSubmit = async () => {
     if (!attemptId) {
-      setError('缺少嘗試 ID，無法提交');
+      setError('Missing attempt ID, cannot submit');
       return;
     }
     
     try {
       setSubmitting(true);
-      console.log(`提交測驗嘗試，測驗ID: ${quizId}, 嘗試ID: ${attemptId}`);
+      console.log(`Submitting quiz attempt, Quiz ID: ${quizId}, Attempt ID: ${attemptId}`);
       
-      // 清理答案數據，移除空值
+      // Clean answer data, remove empty values
       const processedAnswers = answers.map(answer => {
         const result = { ...answer };
         
-        // 處理選擇題答案
+        // Process multiple choice answers
         if (!result.answerChoice || result.answerChoice === '') {
           delete result.answerChoice;
         }
         
-        // 處理空字符串答案
+        // Process empty string answers
         if (result.answerText === '') {
           delete result.answerText;
         }
@@ -155,12 +155,12 @@ function QuizAttempt() {
         return result;
       });
       
-      console.log("提交處理後的答案:", processedAnswers);
+      console.log("Submitting processed answers:", processedAnswers);
       const response = await submitAttempt(attemptId, processedAnswers);
       
-      console.log("測驗提交成功，得分:", response.score);
+      console.log("Quiz submission successful, score:", response.score);
       
-      // 導航到結果頁面，保留測驗ID和嘗試信息
+      // Navigate to results page, preserve quiz ID and attempt information
       navigate(`/Kambaz/Quizzes/${quizId}/results`, { 
         state: { 
           attemptId: attemptId,
@@ -169,17 +169,17 @@ function QuizAttempt() {
         } 
       });
     } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || '提交測驗失敗';
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to submit quiz';
       setError(errorMessage);
-      console.error('提交測驗失敗:', err);
+      console.error('Failed to submit quiz:', err);
       setSubmitting(false);
     }
   };
 
-  if (loading) return <div>載入中...</div>;
-  if (error) return <div className="text-danger">錯誤: {error}</div>;
-  if (!quiz) return <div>找不到測驗</div>;
-  if (!attemptId) return <div className="text-danger">缺少嘗試 ID，請重新開始測驗</div>;
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className="text-danger">Error: {error}</div>;
+  if (!quiz) return <div>Quiz not found</div>;
+  if (!attemptId) return <div className="text-danger">Missing attempt ID, please restart the quiz</div>;
 
   const question = quiz.questions[currentQuestion];
   const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
@@ -190,7 +190,7 @@ function QuizAttempt() {
         <Card.Header>
           <div className="d-flex justify-content-between align-items-center">
             <h4>{quiz.title}</h4>
-            <div className="text-danger">剩餘時間: {formatTime(timeLeft)}</div>
+            <div className="text-danger">Time remaining: {formatTime(timeLeft)}</div>
           </div>
         </Card.Header>
         <Card.Body>
@@ -201,8 +201,8 @@ function QuizAttempt() {
           <Card className="mb-4">
             <Card.Header>
               <div className="d-flex justify-content-between">
-                <div>問題 {currentQuestion + 1}</div>
-                <div>{question.points} 分</div>
+                <div>Question {currentQuestion + 1}</div>
+                <div>{question.points} points</div>
               </div>
             </Card.Header>
             <Card.Body>
@@ -232,7 +232,7 @@ function QuizAttempt() {
                     <Form.Check
                       type="radio"
                       id="true-option"
-                      label="是"
+                      label="True"
                       name="questionBoolean"
                       value="true"
                       checked={answers[currentQuestion].answerBoolean === true}
@@ -241,7 +241,7 @@ function QuizAttempt() {
                     <Form.Check
                       type="radio"
                       id="false-option"
-                      label="否"
+                      label="False"
                       name="questionBoolean"
                       value="false"
                       checked={answers[currentQuestion].answerBoolean === false}
@@ -252,7 +252,7 @@ function QuizAttempt() {
 
                 {question.questionType === 'FILL_BLANK' && (
                   <Form.Group>
-                    <Form.Label>你的答案</Form.Label>
+                    <Form.Label>Your answer</Form.Label>
                     <Form.Control
                       type="text"
                       value={answers[currentQuestion].answerText || ''}
@@ -270,7 +270,7 @@ function QuizAttempt() {
               onClick={prevQuestion}
               disabled={currentQuestion === 0}
             >
-              <FaArrowLeft className="me-1" /> 上一題
+              <FaArrowLeft className="me-1" /> Previous
             </Button>
 
             {currentQuestion < quiz.questions.length - 1 ? (
@@ -278,7 +278,7 @@ function QuizAttempt() {
                 variant="outline-primary" 
                 onClick={nextQuestion}
               >
-                下一題 <FaArrowRight className="ms-1" />
+                Next <FaArrowRight className="ms-1" />
               </Button>
             ) : (
               <Button 
@@ -286,7 +286,7 @@ function QuizAttempt() {
                 onClick={handleSubmit}
                 disabled={submitting}
               >
-                <FaCheck className="me-1" /> 提交測驗
+                <FaCheck className="me-1" /> Submit Quiz
               </Button>
             )}
           </div>

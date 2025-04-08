@@ -1,4 +1,4 @@
-/* 測驗編輯器樣式 */
+/* Quiz editor styles */
 .quiz-editor-container {
   max-width: 1000px;
   margin: 0 auto;
@@ -10,7 +10,7 @@
   margin-bottom: 0;
 }
 
-/* 標題輸入框樣式 */
+/* Title input box styles */
 .quiz-title-input {
   font-size: 1.5rem;
   font-weight: 500;
@@ -25,7 +25,7 @@
   border-bottom: 2px solid #0d6efd;
 }
 
-/* 選項卡樣式 */
+/* Tab styles */
 .nav-tabs .nav-link {
   color: #495057;
   font-weight: 500;
@@ -38,7 +38,7 @@
   border-top: 3px solid #0d6efd;
 }
 
-/* 編輯器工具欄 */
+/* Editor toolbar */
 .editor-toolbar {
   border: 1px solid #dee2e6;
   border-bottom: none;
@@ -47,7 +47,7 @@
   border-radius: 0.25rem 0.25rem 0 0;
 }
 
-/* 問題卡片樣式 */
+/* Question card styles */
 .question-card {
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
   border-radius: 0.5rem;
@@ -85,7 +85,7 @@
   background-color: rgba(13, 110, 253, 0.05);
 }
 
-/* 選項和答案區域 */
+/* Options and answers area */
 .choices-section, .fill-blank-section {
   background-color: #f8f9fa;
   padding: 1rem;
@@ -93,7 +93,7 @@
   margin-bottom: 1rem;
 }
 
-/* 操作按鈕 */
+/* Action buttons */
 .action-buttons .btn {
   display: inline-flex;
   align-items: center;
@@ -105,7 +105,7 @@
   margin-right: 0.5rem;
 }
 
-/* 表單元素樣式 */
+/* Form element styles */
 .form-check {
   margin-bottom: 0.5rem;
 }
@@ -120,7 +120,7 @@
   align-items: center;
 }
 
-/* 響應式調整 */
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .action-buttons {
     display: flex;
@@ -141,7 +141,7 @@
   }
 }
 
-/* 解決 TypeScript 錯誤的提示 */
+/* Solution for TypeScript error hint */
 .ts-error-ignored {
   display: none;
 } 

@@ -28,9 +28,9 @@ import {
   FaCalendarAlt,
   FaQuestionCircle
 } from 'react-icons/fa';
-import './QuizzesList.css'; // 引入樣式文件
+import './QuizzesList.css'; // Import style file
 
-// 測驗介面定義
+// Quiz interface definition
 interface Quiz {
   _id: string;
   title: string;
@@ -44,7 +44,7 @@ interface Quiz {
   quizType: string;
 }
 
-// 學生嘗試介面
+// Student attempt interface
 interface Attempt {
   _id: string;
   score: number;
@@ -60,13 +60,13 @@ function QuizzesList() {
   const [sortBy, setSortBy] = useState<'name' | 'dueDate' | 'availableDate'>('name');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<'student' | 'instructor'>('instructor'); // 簡單起見，預設為講師
+  const [userRole, setUserRole] = useState<'student' | 'instructor'>('instructor'); // For simplicity, default as instructor
   const [studentAttempts, setStudentAttempts] = useState<Record<string, Attempt>>({});
 
-  // 獲取測驗列表
+  // Get quiz list
   const fetchQuizzes = async () => {
     if (!cid) {
-      setError("無法獲取課程 ID");
+      setError("Unable to get course ID");
       return;
     }
     
@@ -87,60 +87,60 @@ function QuizzesList() {
         setQuizzes([]);
       }
     } catch (err: any) {
-      console.error('獲取測驗列表出錯:', err);
-      setError(err.message || '獲取測驗列表失敗');
+      console.error('Error getting quiz list:', err);
+      setError(err.message || 'Failed to get quiz list');
       setQuizzes([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 初始加載時獲取測驗
+  // Fetch quizzes on initial load
   useEffect(() => {
     fetchQuizzes();
   }, [cid]);
 
-  // 創建新測驗
+  // Create new quiz
   const handleCreateQuiz = () => {
     navigate(`/Kambaz/Courses/${cid}/Quizzes/new`);
   };
 
-  // 導航到測驗詳情頁面
+  // Navigate to quiz details page
   const handleViewQuiz = (quizId: string) => {
     navigate(`/Kambaz/Quizzes/${quizId}`);
   };
 
-  // 導航到測驗編輯頁面
+  // Navigate to quiz edit page
   const handleEditQuiz = (quizId: string) => {
     navigate(`/Kambaz/Quizzes/${quizId}/edit`);
   };
 
-  // 刪除測驗確認
+  // Confirm quiz deletion
   const confirmDeleteQuiz = (quizId: string) => {
     setQuizToDelete(quizId);
     setShowDeleteModal(true);
   };
 
-  // 刪除測驗
+  // Delete quiz
   const handleDeleteQuiz = async () => {
     if (!quizToDelete) return;
     
     try {
       setLoading(true);
       await deleteQuiz(quizToDelete);
-      // 成功刪除後更新列表
+      // Update list after successful deletion
       setQuizzes(quizzes.filter(quiz => quiz._id !== quizToDelete));
       setShowDeleteModal(false);
       setQuizToDelete(null);
     } catch (err: any) {
-      console.error('刪除測驗失敗:', err);
-      setError(err.message || '刪除測驗失敗');
+      console.error('Failed to delete quiz:', err);
+      setError(err.message || 'Failed to delete quiz');
     } finally {
       setLoading(false);
     }
   };
 
-  // 發布/取消發布測驗
+  // Publish/unpublish quiz
   const togglePublishQuiz = async (quizId: string, isPublished: boolean) => {
     try {
       setLoading(true);
@@ -151,7 +151,7 @@ function QuizzesList() {
         await publishQuiz(quizId);
       }
       
-      // 更新測驗列表中的狀態
+      // Update quiz status in the list
       setQuizzes(quizzes.map(quiz => {
         if (quiz._id === quizId) {
           return { ...quiz, published: !isPublished };
@@ -159,20 +159,20 @@ function QuizzesList() {
         return quiz;
       }));
     } catch (err: any) {
-      console.error(`${isPublished ? '取消發布' : '發布'}測驗失敗:`, err);
-      setError(err.message || `${isPublished ? '取消發布' : '發布'}測驗失敗`);
+      console.error(`Failed to ${isPublished ? 'unpublish' : 'publish'} quiz:`, err);
+      setError(err.message || `Failed to ${isPublished ? 'unpublish' : 'publish'} quiz`);
     } finally {
       setLoading(false);
     }
   };
 
-  // 複製測驗到其他課程（optional）
+  // Copy quiz to other course (optional)
   const handleCopyQuiz = (quizId: string) => {
-    // 這裡可以打開一個模態框來選擇目標課程
-    console.log('複製測驗:', quizId);
+    // Could open a modal here to select target course
+    console.log('Copy quiz:', quizId);
   };
 
-  // 排序測驗
+  // Sort quizzes
   const handleSort = (sortType: 'name' | 'dueDate' | 'availableDate') => {
     setSortBy(sortType);
     
@@ -193,7 +193,7 @@ function QuizzesList() {
     setQuizzes(sortedQuizzes);
   };
 
-  // 獲取測驗可用性狀態
+  // Get quiz availability status
   const getAvailabilityStatus = (quiz: Quiz) => {
     const now = new Date();
     const availableDate = quiz.availableDate ? new Date(quiz.availableDate) : null;
@@ -201,48 +201,48 @@ function QuizzesList() {
     
     if (availableDate && now < availableDate) {
       return { 
-        status: '尚未開放', 
-        label: `開放日期：${availableDate.toLocaleDateString()} ${availableDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`,
+        status: 'Not Available Yet', 
+        label: `Available on: ${availableDate.toLocaleDateString()} ${availableDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`,
         color: 'secondary'
       };
     }
     
     if (untilDate && now > untilDate) {
       return { 
-        status: '已關閉', 
-        label: '已結束',
+        status: 'Closed', 
+        label: 'Ended',
         color: 'dark' 
       };
     }
     
     return { 
-      status: '開放中', 
-      label: '可用',
+      status: 'Available', 
+      label: 'Available',
       color: 'success' 
     };
   };
 
-  // 格式化日期顯示
+  // Format date display
   const formatDate = (dateString?: Date) => {
-    if (!dateString) return '無截止日期';
+    if (!dateString) return 'No due date';
     
     const date = new Date(dateString);
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
   };
 
-  // 空狀態組件
+  // Empty state component
   const EmptyState = () => (
     <Card className="empty-state-card">
       <Card.Body>
         <FaQuestionCircle className="empty-state-icon" />
-        <Card.Title>尚無測驗</Card.Title>
-        <Card.Text>點擊"+ 測驗"按鈕創建新測驗</Card.Text>
+        <Card.Title>No Quizzes Yet</Card.Title>
+        <Card.Text>Click the "+ Quiz" button to create a new quiz</Card.Text>
         <Button 
           variant="primary" 
           onClick={handleCreateQuiz}
           className="d-flex align-items-center mx-auto add-quiz-btn"
         >
-          <FaPlus className="me-2" /> 新增測驗
+          <FaPlus className="me-2" /> Add Quiz
         </Button>
       </Card.Body>
     </Card>
@@ -252,7 +252,7 @@ function QuizzesList() {
     return (
       <Container className="text-center my-5">
         <Spinner animation="border" role="status">
-          <span className="visually-hidden">載入中...</span>
+          <span className="visually-hidden">Loading...</span>
         </Spinner>
       </Container>
     );
@@ -261,19 +261,19 @@ function QuizzesList() {
   return (
     <Container className="quiz-list-container">
       <div className="quizzes-header">
-        <h2>課程測驗</h2>
+        <h2>Course Quizzes</h2>
         <div className="d-flex gap-2">
           <Dropdown>
             <Dropdown.Toggle variant="outline-secondary" id="sort-dropdown" className="sort-dropdown">
-              排序方式：{
-                sortBy === 'name' ? '名稱' : 
-                sortBy === 'dueDate' ? '截止日期' : '開放日期'
+              Sort by: {
+                sortBy === 'name' ? 'Name' : 
+                sortBy === 'dueDate' ? 'Due Date' : 'Available Date'
               }
             </Dropdown.Toggle>
             <Dropdown.Menu>
-              <Dropdown.Item onClick={() => handleSort('name')}>名稱</Dropdown.Item>
-              <Dropdown.Item onClick={() => handleSort('dueDate')}>截止日期</Dropdown.Item>
-              <Dropdown.Item onClick={() => handleSort('availableDate')}>開放日期</Dropdown.Item>
+              <Dropdown.Item onClick={() => handleSort('name')}>Name</Dropdown.Item>
+              <Dropdown.Item onClick={() => handleSort('dueDate')}>Due Date</Dropdown.Item>
+              <Dropdown.Item onClick={() => handleSort('availableDate')}>Available Date</Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
           <Button 
@@ -281,7 +281,7 @@ function QuizzesList() {
             onClick={handleCreateQuiz}
             className="d-flex align-items-center add-quiz-btn"
           >
-            <FaPlus className="me-2" /> 測驗
+            <FaPlus className="me-2" /> Quiz
           </Button>
         </div>
       </div>
@@ -297,12 +297,12 @@ function QuizzesList() {
             return (
               <ListGroup.Item key={quiz._id} className={`p-0 mb-2 border quiz-item ${quiz.published ? 'published' : 'unpublished'}`}>
                 <Row className="m-0 p-0 align-items-center">
-                  {/* 發布狀態圖標 */}
+                  {/* Published status icon */}
                   <Col xs={1} className="text-center py-3">
                     {quiz.published ? (
                       <div 
                         className="quiz-status-icon published" 
-                        title="已發布，點擊取消發布"
+                        title="Published, click to unpublish"
                         onClick={() => togglePublishQuiz(quiz._id, true)}
                       >
                         <FaCheck />
@@ -310,7 +310,7 @@ function QuizzesList() {
                     ) : (
                       <div 
                         className="quiz-status-icon unpublished" 
-                        title="未發布，點擊發布"
+                        title="Unpublished, click to publish"
                         onClick={() => togglePublishQuiz(quiz._id, false)}
                       >
                         <FaBan />
@@ -318,7 +318,7 @@ function QuizzesList() {
                     )}
                   </Col>
                   
-                  {/* 測驗信息（標題/類型等） */}
+                  {/* Quiz info (title/type etc) */}
                   <Col xs={8} className="py-3">
                     <div 
                       className="quiz-title" 
@@ -330,31 +330,31 @@ function QuizzesList() {
                       <Badge bg={availabilityInfo.color as any}>{availabilityInfo.status}</Badge>
                       <span className="quiz-detail-item">
                         <FaCalendarAlt />
-                        截止日期: {formatDate(quiz.dueDate)}
+                        Due date: {formatDate(quiz.dueDate)}
                       </span>
-                      <span className="quiz-detail-item">{quiz.totalPoints} 分</span>
-                      <span className="quiz-detail-item">{quiz.questions?.length || 0} 個問題</span>
+                      <span className="quiz-detail-item">{quiz.totalPoints} points</span>
+                      <span className="quiz-detail-item">{quiz.questions?.length || 0} questions</span>
                       {userRole === 'student' && studentAttempts[quiz._id] && (
                         <span className="quiz-detail-item fw-bold">
-                          得分: {studentAttempts[quiz._id].score} / {quiz.totalPoints}
+                          Score: {studentAttempts[quiz._id].score} / {quiz.totalPoints}
                         </span>
                       )}
                     </div>
                   </Col>
                   
-                  {/* 右側操作按鈕 */}
+                  {/* Right action buttons */}
                   <Col xs={3} className="d-flex justify-content-end py-3 pe-3 quiz-actions">
                     <Dropdown>
                       <Dropdown.Toggle variant="light" id={`dropdown-${quiz._id}`}>
                         <FaEllipsisV />
                       </Dropdown.Toggle>
                       <Dropdown.Menu>
-                        <Dropdown.Item onClick={() => handleEditQuiz(quiz._id)}>編輯</Dropdown.Item>
-                        <Dropdown.Item onClick={() => confirmDeleteQuiz(quiz._id)}>刪除</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleEditQuiz(quiz._id)}>Edit</Dropdown.Item>
+                        <Dropdown.Item onClick={() => confirmDeleteQuiz(quiz._id)}>Delete</Dropdown.Item>
                         <Dropdown.Item onClick={() => togglePublishQuiz(quiz._id, quiz.published)}>
-                          {quiz.published ? '取消發布' : '發布'}
+                          {quiz.published ? 'Unpublish' : 'Publish'}
                         </Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleCopyQuiz(quiz._id)}>複製到其他課程</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleCopyQuiz(quiz._id)}>Copy to another course</Dropdown.Item>
                       </Dropdown.Menu>
                     </Dropdown>
                   </Col>
@@ -365,20 +365,20 @@ function QuizzesList() {
         </ListGroup>
       )}
       
-      {/* 刪除確認對話框 */}
+      {/* Delete confirmation dialog */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} className="delete-confirm-modal">
         <Modal.Header closeButton>
-          <Modal.Title>確認刪除</Modal.Title>
+          <Modal.Title>Confirm Deletion</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          您確定要刪除這個測驗嗎？此操作不可撤銷。
+          Are you sure you want to delete this quiz? This action cannot be undone.
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            取消
+            Cancel
           </Button>
           <Button variant="danger" onClick={handleDeleteQuiz}>
-            刪除
+            Delete
           </Button>
         </Modal.Footer>
       </Modal>
