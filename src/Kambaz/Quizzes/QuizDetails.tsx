@@ -33,6 +33,7 @@ interface Quiz {
     questionText: string;
     points: number;
   }>;
+  courseCode?: string;
 }
 
 interface QuizDetailsProps {
@@ -133,9 +134,24 @@ function QuizDetails({ courseId }: QuizDetailsProps) {
       }
       
       console.log(`Quiz attempt created successfully, entering attempt page, attempt ID=${response.data._id}`);
-      navigate(`/Kambaz/Quizzes/${quiz._id}/attempt`, { 
-        state: { attemptId: response.data._id } 
-      });
+      
+      // Determine courseId to pass in state
+      const effectiveCourseId = courseId || quiz.course || quiz.courseCode;
+      
+      if (effectiveCourseId) {
+        // Include course context in URL
+        navigate(`/Kambaz/Courses/${effectiveCourseId}/Quizzes/${quiz._id}/attempt`, { 
+          state: { 
+            attemptId: response.data._id,
+            courseId: effectiveCourseId 
+          } 
+        });
+      } else {
+        // Default navigation without course context
+        navigate(`/Kambaz/Quizzes/${quiz._id}/attempt`, { 
+          state: { attemptId: response.data._id } 
+        });
+      }
     } catch (err: any) {
       console.error("Error starting quiz:", err);
       const errorMessage = err.response?.data?.message || err.message || "Unknown error";
@@ -145,7 +161,23 @@ function QuizDetails({ courseId }: QuizDetailsProps) {
 
   // Add function to view most recent attempt results
   const handleViewResults = () => {
-    if (lastAttempt && lastAttempt._id) {
+    if (!lastAttempt || !lastAttempt._id) return;
+    
+    // Determine courseId to pass in state
+    const effectiveCourseId = courseId || quiz?.course || quiz?.courseCode;
+    
+    if (effectiveCourseId) {
+      // Include course context in URL
+      navigate(`/Kambaz/Courses/${effectiveCourseId}/Quizzes/${quizId}/results`, {
+        state: {
+          attemptId: lastAttempt._id,
+          score: lastAttempt.score,
+          totalPoints: quiz?.totalPoints,
+          courseId: effectiveCourseId
+        }
+      });
+    } else {
+      // Default navigation without course context
       navigate(`/Kambaz/Quizzes/${quizId}/results`, {
         state: {
           attemptId: lastAttempt._id,
@@ -168,6 +200,7 @@ function QuizDetails({ courseId }: QuizDetailsProps) {
     console.log("Back button clicked");
     console.log("CourseId from props:", courseId);
     console.log("Quiz course property:", quiz?.course);
+    console.log("Quiz courseCode property:", quiz?.courseCode);
 
     // 1. First priority: use courseId from props
     if (courseId) {
@@ -183,7 +216,14 @@ function QuizDetails({ courseId }: QuizDetailsProps) {
       return;
     }
     
-    // 3. Try to get possible course ID from current URL
+    // 3. Third priority: use courseCode from quiz data
+    if (quiz && quiz.courseCode) {
+      console.log("Using courseCode from quiz data to return:", quiz.courseCode);
+      navigate(`/Kambaz/Courses/${quiz.courseCode}/Quizzes`);
+      return;
+    }
+    
+    // 4. Try to get possible course ID from current URL
     const urlParts = window.location.href.split('/');
     const coursesIndex = urlParts.findIndex(part => part === 'Courses');
     
@@ -427,7 +467,7 @@ function QuizDetails({ courseId }: QuizDetailsProps) {
             <h4 className="section-title mt-4">Quiz Questions ({quiz.questions.length || 0})</h4>
             {quiz.questions.length === 0 ? (
               <Alert variant="warning">This quiz has no questions yet</Alert>
-            ) : (
+            ) : isTeacher ? (
               <ListGroup className="question-list">
                 {quiz.questions.map((question: Quiz['questions'][0], index: number) => (
                   <ListGroup.Item key={question._id} className="question-item">
@@ -441,6 +481,13 @@ function QuizDetails({ courseId }: QuizDetailsProps) {
                   </ListGroup.Item>
                 ))}
               </ListGroup>
+            ) : (
+              <Alert variant="info">
+                This quiz contains {quiz.questions.length} questions with a total of {quiz.totalPoints} points.
+                <div className="mt-2">
+                  <Badge bg="secondary" className="me-2">Questions will be shown during the quiz</Badge>
+                </div>
+              </Alert>
             )}
           </div>
         </Card.Body>

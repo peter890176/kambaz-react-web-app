@@ -49,6 +49,8 @@ interface Quiz {
   untilDate?: Date;
   questions: Question[];
   totalPoints: number;
+  course?: string;
+  courseCode?: string;
 }
 
 // User answer type
@@ -521,6 +523,28 @@ const QuizPreview: React.FC = () => {
     setStartTime(new Date(attemptToView.startTime));
   };
 
+  // Add function to handle navigation back to quiz list
+  const handleBackToList = () => {
+    console.log("Back button clicked in QuizPreview");
+    
+    // Try to get course from quiz data
+    if (quiz && quiz.course) {
+      console.log("Using course from quiz data to return:", quiz.course);
+      navigate(`/Kambaz/Courses/${quiz.course}/Quizzes`);
+      return;
+    }
+    
+    // Try to use courseCode
+    if (quiz && quiz.courseCode) {
+      console.log("Using courseCode from quiz data to return:", quiz.courseCode);
+      navigate(`/Kambaz/Courses/${quiz.courseCode}/Quizzes`);
+      return;
+    }
+    
+    // Otherwise, just go back to previous page
+    navigate(-1);
+  };
+
   // Render quiz information
   const renderQuizInfo = () => {
     if (!quiz) {
@@ -539,7 +563,14 @@ const QuizPreview: React.FC = () => {
       <Card className="mb-4 quiz-info-card">
         <Card.Header className={isPreviewMode ? "bg-warning text-dark" : "bg-primary text-white"}>
           <div className="d-flex align-items-center justify-content-between">
-            <div>
+            <div className="d-flex align-items-center">
+              <Button 
+                variant="outline-secondary" 
+                className="me-3"
+                onClick={handleBackToList}
+              >
+                <FaArrowLeft className="me-1" /> Back to Quizzes List
+              </Button>
               {isPreviewMode ? (
                 <>
                   <FaExclamationTriangle className="me-2" />

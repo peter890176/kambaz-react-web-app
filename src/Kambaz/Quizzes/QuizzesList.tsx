@@ -250,7 +250,11 @@ function QuizzesList() {
       <Card.Body>
         <FaQuestionCircle className="empty-state-icon" />
         <Card.Title>No Quizzes Yet</Card.Title>
-        <Card.Text>Click the "+ Quiz" button to create a new quiz</Card.Text>
+        <Card.Text>
+          {userRole === 'instructor' 
+            ? "Click the \"+ Quiz\" button to create a new quiz" 
+            : "There are no quizzes available right now"}
+        </Card.Text>
         {userRole === 'instructor' && (
           <Button 
             variant="primary" 

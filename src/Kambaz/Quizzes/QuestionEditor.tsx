@@ -482,7 +482,7 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             variant="danger" 
             onClick={saveQuestion}
           >
-            {isNew ? 'Add Question' : 'Update Question'}
+            <FaCheck className="me-1" /> Confirm Question
           </Button>
         </div>
       </Card.Body>

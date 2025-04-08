@@ -27,7 +27,9 @@ import {
   FaCamera,
   FaRandom,
   FaLayerGroup,
-  FaKey
+  FaKey,
+  FaCheck,
+  FaExclamationCircle
 } from 'react-icons/fa';
 import './QuizEditor.css';
 import QuestionEditor, { Question } from './QuestionEditor';
@@ -85,6 +87,10 @@ function QuizEditor() {
   
   // Question list
   const [questions, setQuestions] = useState<Question[]>([]);
+  // Track which questions have been confirmed
+  const [confirmedQuestions, setConfirmedQuestions] = useState<boolean[]>([]);
+  // Track if the current question form is dirty (has unsaved changes)
+  const [hasUnconfirmedQuestion, setHasUnconfirmedQuestion] = useState(false);
 
   // If in edit mode, load existing quiz data
   useEffect(() => {
@@ -113,6 +119,8 @@ function QuizEditor() {
           setAttemptsAllowed(quiz.attemptsAllowed || 1);
           setShowCorrectAnswers(quiz.showCorrectAnswers || false);
           setQuestions(quiz.questions || []);
+          // For existing quizzes, mark all questions as confirmed
+          setConfirmedQuestions(Array(quiz.questions?.length || 0).fill(true));
           setOneQuestionAtTime(quiz.oneQuestionAtTime !== undefined ? quiz.oneQuestionAtTime : true);
           setWebcamRequired(quiz.webcamRequired || false);
           setLockQuestionsAfterAnswering(quiz.lockQuestionsAfterAnswering || false);
@@ -173,6 +181,18 @@ function QuizEditor() {
     const newQuestions = [...questions];
     newQuestions.splice(index, 1);
     setQuestions(newQuestions);
+    
+    // Also remove this question's confirmation status
+    const newConfirmedQuestions = [...confirmedQuestions];
+    newConfirmedQuestions.splice(index, 1);
+    setConfirmedQuestions(newConfirmedQuestions);
+  };
+
+  // Confirm the question
+  const confirmQuestion = (index: number) => {
+    const newConfirmedQuestions = [...confirmedQuestions];
+    newConfirmedQuestions[index] = true;
+    setConfirmedQuestions(newConfirmedQuestions);
   };
 
   // Update question
@@ -180,6 +200,21 @@ function QuizEditor() {
     const newQuestions = [...questions];
     newQuestions[index] = updatedQuestion;
     setQuestions(newQuestions);
+    
+    const newConfirmedQuestions = [...confirmedQuestions];
+    
+    // If the question is not in editing mode, it means the user has confirmed it
+    // We should mark it as confirmed
+    if (!updatedQuestion.isEditing) {
+      newConfirmedQuestions[index] = true;
+      setConfirmedQuestions(newConfirmedQuestions);
+      console.log(`Question ${index} has been confirmed`);
+    } else {
+      // Mark as unconfirmed if the question is being edited
+      newConfirmedQuestions[index] = false;
+      setConfirmedQuestions(newConfirmedQuestions);
+      console.log(`Question ${index} is now being edited`);
+    }
   };
 
   // Calculate total points
@@ -190,8 +225,24 @@ function QuizEditor() {
   // Save quiz
   const handleSave = async (e: React.FormEvent, shouldPublish: boolean = false) => {
     e.preventDefault();
+
+    // Validate quiz has at least one question
+    if (questions.length === 0) {
+      setError("Quiz must contain at least one question. Please add a question before saving.");
+      return; // Prevent saving
+    }
     
-    // Build quiz data
+    // Check if any questions are unconfirmed
+    if (confirmedQuestions.includes(false)) {
+      setError("All questions must be confirmed before saving. Please confirm each question by clicking the 'Confirm Question' button.");
+      setActiveTab('questions');
+      return; // Prevent saving
+    }
+    
+    // Calculate total points
+    const totalPoints = calculateTotalPoints();
+    
+    // Collect quiz data
     const quizData = {
       title,
       description,
@@ -644,7 +695,29 @@ function QuizEditor() {
 
           {/* Questions tab */}
           <Tab.Pane eventKey="questions">
-            <Card>
+            {questions.length === 0 && (
+              <Alert variant="info" className="mb-3">
+                <div className="d-flex align-items-center">
+                  <FaExclamationCircle className="me-2" />
+                  <div>
+                    <strong>No questions yet.</strong> You need to add at least one question before saving the quiz.
+                  </div>
+                </div>
+              </Alert>
+            )}
+            
+            {confirmedQuestions.includes(false) && (
+              <Alert variant="warning" className="mb-3">
+                <div className="d-flex align-items-center">
+                  <FaExclamationCircle className="me-2" />
+                  <div>
+                    <strong>Unconfirmed questions detected.</strong> Please confirm all questions before saving.
+                  </div>
+                </div>
+              </Alert>
+            )}
+            
+            <Card className="mb-4">
               <Card.Body>
                 <div className="d-flex justify-content-between align-items-center mb-4">
                   <div>
@@ -659,7 +732,7 @@ function QuizEditor() {
                     <FaPlus className="me-1" /> Add Question
                   </Button>
                 </div>
-
+  
                 {questions.length === 0 ? (
                   <div className="text-center py-5">
                     <div className="mb-3">
@@ -671,14 +744,29 @@ function QuizEditor() {
                 ) : (
                   <div className="questions-list">
                     {questions.map((question, index) => (
-                      <QuestionEditor
-                        key={question._id || index}
-                        question={question}
-                        index={index}
-                        onUpdate={updateQuestion}
-                        onRemove={removeQuestion}
-                        isNew={!question._id}
-                      />
+                      <div key={question._id || index} className="mb-4">
+                        <div className={`question-card ${!confirmedQuestions[index] ? 'unconfirmed-question' : 'confirmed-question'}`}>
+                          {!confirmedQuestions[index] && (
+                            <div className="unconfirmed-badge">
+                              <Badge bg="warning" className="mb-2">Needs Confirmation</Badge>
+                            </div>
+                          )}
+                          {confirmedQuestions[index] && (
+                            <div className="confirmed-badge">
+                              <Badge bg="success" className="mb-2">
+                                <FaCheck className="me-1" /> Confirmed
+                              </Badge>
+                            </div>
+                          )}
+                          <QuestionEditor
+                            question={question}
+                            index={index}
+                            onUpdate={updateQuestion}
+                            onRemove={removeQuestion}
+                            isNew={!question._id}
+                          />
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
