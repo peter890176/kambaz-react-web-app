@@ -74,6 +74,7 @@ interface Attempt {
 }
 
 const QuizPreview: React.FC = () => {
+  console.log("QuizPreview component loaded! QuizId:", useParams().quizId);
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
   const { currentUser } = useSelector((state: any) => state.accountReducer);
@@ -102,8 +103,15 @@ const QuizPreview: React.FC = () => {
       
       try {
         setLoading(true);
+        console.log("Current user:", currentUser);
+        
+        // Debug: log current user role and state before API call
+        console.log("Current user role:", currentUser?.role);
+        console.log("Is faculty check:", currentUser && (currentUser.role === "FACULTY" || currentUser.role === "ADMIN"));
+        
         const response = await getQuizById(quizId);
         const quizData = response.data;
+        console.log("Quiz data received:", quizData);
         setQuiz(quizData);
         
         // Initialize user answers
@@ -120,11 +128,30 @@ const QuizPreview: React.FC = () => {
           setTimeRemaining(quizData.timeLimit * 60); // convert to seconds
         }
 
-        // Check if in preview mode (teacher access)
-        const isFaculty = currentUser && (currentUser.role === "FACULTY" || currentUser.role === "ADMIN");
+        // Check if in preview mode (teacher access) - Force enable for easier debugging
+        // const isFaculty = currentUser && (currentUser.role === "FACULTY" || currentUser.role === "ADMIN");
+        const isFaculty = true; // Force enable for testing
+        console.log("Setting preview mode to:", isFaculty);
         setIsPreviewMode(isFaculty);
         
-        // Get user's previous attempts
+        // Create dummy attempt for faculty preview immediately to ensure it's available
+        if (isFaculty) {
+          console.log('Creating dummy preview attempt for faculty');
+          const dummyAttempt = {
+            _id: 'preview-' + new Date().getTime(),
+            quiz: quizId,
+            user: currentUser?.id || 'preview-user',
+            answers: initialAnswers,
+            score: 0,
+            completed: false,
+            startTime: new Date(),
+          };
+          console.log("Created dummy attempt:", dummyAttempt);
+          setAttempt(dummyAttempt);
+          setUserAnswers(initialAnswers);
+        }
+        
+        // Get user's previous attempts (only for students)
         try {
           const attemptsResponse = await getAttemptsForQuiz(quizId);
           if (attemptsResponse && attemptsResponse.length > 0) {
@@ -172,10 +199,11 @@ const QuizPreview: React.FC = () => {
           setUserAnswers(initialAnswers);
         }
         
-        // Only create a new attempt if attempt limit not reached and not viewing history attempt
-        if (!attemptLimitReached && !isViewingAttempt && !showResults) {
+        // For students: Only create a new attempt if attempt limit not reached
+        if (!attemptLimitReached && !isViewingAttempt && !showResults && !isFaculty) {
           try {
             const attemptResponse = await createAttempt(quizId);
+            console.log("Student attempt created:", attemptResponse.data);
             setAttempt(attemptResponse.data);
             setStartTime(new Date(attemptResponse.data.startTime));
           } catch (attemptErr: any) {
@@ -188,8 +216,8 @@ const QuizPreview: React.FC = () => {
           }
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to load quiz');
         console.error('Failed to load quiz:', err);
+        setError(err.message || 'Failed to load quiz');
       } finally {
         setLoading(false);
       }
@@ -282,13 +310,51 @@ const QuizPreview: React.FC = () => {
 
   // Submit quiz
   const handleSubmitQuiz = async () => {
-    if (!quiz || !attempt) return;
+    if (!quiz) {
+      console.error("Cannot submit: quiz is null");
+      return;
+    }
     
+    if (!attempt) {
+      console.error("Cannot submit: attempt is null");
+      
+      // For preview mode, create a temporary attempt if one doesn't exist
+      if (isPreviewMode) {
+        console.log("Creating a temporary attempt for preview mode submission");
+        const tempAttempt = {
+          _id: 'preview-' + new Date().getTime(),
+          quiz: quizId as string,
+          user: currentUser?.id || 'preview-user',
+          answers: userAnswers,
+          score: 0,
+          completed: false,
+          startTime: new Date(),
+        };
+        setAttempt(tempAttempt);
+        
+        // Continue with scoring using the temp attempt
+        calculateAndShowScore(tempAttempt);
+        return;
+      }
+      return;
+    }
+    
+    // Extract the actual score calculation into a separate function
+    calculateAndShowScore(attempt);
+  };
+
+  // Helper function to calculate score and show results
+  const calculateAndShowScore = async (currentAttempt: Attempt) => {
     try {
       // Calculate score
       let totalScore = 0;
       
       const scoredAnswers = userAnswers.map((answer, index) => {
+        if (!quiz || !quiz.questions[index]) {
+          console.error(`Missing question data at index ${index}`);
+          return answer;
+        }
+        
         const question = quiz.questions[index];
         let isCorrect = false;
         
@@ -319,7 +385,20 @@ const QuizPreview: React.FC = () => {
       setScore(totalScore);
       setUserAnswers(scoredAnswers);
       
-      // Submit attempt
+      // For faculty in preview mode, just show results without submitting to server
+      if (isPreviewMode && currentAttempt._id.toString().startsWith('preview-')) {
+        console.log('Faculty preview mode - not submitting to server');
+        setShowResults(true);
+        
+        // Stop timer
+        if (timerInterval) {
+          window.clearInterval(timerInterval);
+        }
+        
+        return;
+      }
+      
+      // Submit attempt (only for student mode)
       const attemptData = {
         answers: scoredAnswers,
         score: totalScore,
@@ -327,7 +406,7 @@ const QuizPreview: React.FC = () => {
         endTime: new Date()
       };
       
-      await submitAttempt(attempt._id, attemptData);
+      await submitAttempt(currentAttempt._id, attemptData);
       
       // Show results
       setShowResults(true);
@@ -342,7 +421,7 @@ const QuizPreview: React.FC = () => {
       setPreviousAttempts(attemptsResponse);
       
       // Check if attempt limit reached
-      if (!isPreviewMode) {
+      if (!isPreviewMode && quiz) {
         const completedAttempts = attemptsResponse.filter(
           (att: Attempt) => att.completed
         );
@@ -393,7 +472,21 @@ const QuizPreview: React.FC = () => {
       setTimeRemaining(quiz.timeLimit * 60);
     }
     
-    // Create new attempt
+    // For faculty preview mode, create a new dummy attempt
+    if (isPreviewMode) {
+      setAttempt({
+        _id: 'preview-' + new Date().getTime(),
+        quiz: quizId as string,
+        user: currentUser?.id || 'preview-user',
+        answers: userAnswers,
+        score: 0,
+        completed: false,
+        startTime: new Date(),
+      });
+      return;
+    }
+    
+    // Create new attempt (for students only)
     const createNewAttempt = async () => {
       if (!quizId) return;
       
@@ -412,7 +505,9 @@ const QuizPreview: React.FC = () => {
       }
     };
     
-    createNewAttempt();
+    if (!isPreviewMode) {
+      createNewAttempt();
+    }
   };
 
   // View specific attempt answers
@@ -428,7 +523,12 @@ const QuizPreview: React.FC = () => {
 
   // Render quiz information
   const renderQuizInfo = () => {
-    if (!quiz) return null;
+    if (!quiz) {
+      console.log("renderQuizInfo: quiz is null");
+      return null;
+    }
+    
+    console.log("renderQuizInfo called, quiz exists:", quiz.title);
     
     const attemptsUsed = previousAttempts.filter(a => a.completed).length;
     const attemptsRemaining = quiz.multipleAttempts ? 
@@ -897,6 +997,7 @@ const QuizPreview: React.FC = () => {
   };
 
   if (loading) {
+    console.log("Component is in loading state");
     return (
       <Container className="my-5 text-center">
         <div className="spinner-border" role="status">
@@ -907,6 +1008,7 @@ const QuizPreview: React.FC = () => {
   }
 
   if (error) {
+    console.log("Component has error:", error);
     return (
       <Container className="my-5">
         <Alert variant="danger">
@@ -921,6 +1023,7 @@ const QuizPreview: React.FC = () => {
   }
 
   if (!quiz) {
+    console.log("Quiz is null or undefined");
     return (
       <Container className="my-5">
         <Alert variant="warning">
@@ -934,6 +1037,11 @@ const QuizPreview: React.FC = () => {
     );
   }
 
+  console.log("Rendering quiz:", quiz.title);
+  console.log("Attempt:", attempt);
+  console.log("Is preview mode:", isPreviewMode);
+  console.log("User answers:", userAnswers);
+
   return (
     <Container className="my-4 quiz-preview-container">
       {/* Quiz title and information area */}
@@ -944,14 +1052,18 @@ const QuizPreview: React.FC = () => {
         renderResultSummary()
       ) : (
         /* Show single question or all questions based on quiz settings */
-        quiz.oneQuestionAtTime ? renderSingleQuestionView() : renderAllQuestionsView()
+        quiz && quiz.questions && quiz.questions.length > 0 ? (
+          quiz.oneQuestionAtTime ? renderSingleQuestionView() : renderAllQuestionsView()
+        ) : (
+          <Alert variant="warning">No questions available for this quiz.</Alert>
+        )
       )}
       
       {/* Attempt history dialog */}
       {renderAttemptsHistory()}
       
       {/* Bottom edit button (preview mode only) */}
-      {!showResults && isPreviewMode && (
+      {!showResults && isPreviewMode && quiz && (
         <div className="mt-4 text-center">
           <Button 
             variant="outline-primary" 
@@ -959,6 +1071,16 @@ const QuizPreview: React.FC = () => {
           >
             <FaEdit className="me-1" /> Edit Quiz
           </Button>
+        </div>
+      )}
+      
+      {/* Debug info in dev mode */}
+      {import.meta.env.DEV && (
+        <div className="mt-4 p-3 border border-info rounded bg-light">
+          <h5>Debug Info:</h5>
+          <div>Preview Mode: {isPreviewMode ? "Yes" : "No"}</div>
+          <div>Questions: {quiz ? quiz.questions.length : 0}</div>
+          <div>Attempt ID: {attempt ? attempt._id : "No attempt"}</div>
         </div>
       )}
     </Container>

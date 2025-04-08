@@ -108,12 +108,11 @@ export const createQuiz = async (courseId: string, quizData: any) => {
   }
 };
 
-// Get quiz details
 export const getQuizById = async (quizId: string) => {
   try {
-    console.log(`Attempting to get quiz details, ID: ${quizId}`);
+    console.log(`Getting quiz details, ID: ${quizId}`);
     const response = await axiosWithCredentials.get(`/quizzes/${quizId}`);
-    return response;  // Return entire response object, including data property
+    return response;
   } catch (error: any) {
     console.error("Failed to get quiz details:", error);
     throw error;

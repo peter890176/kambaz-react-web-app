@@ -14,7 +14,8 @@ import {
   QuizDetails, 
   QuizEditor, 
   QuizAttempt, 
-  QuizResults 
+  QuizResults,
+  QuizPreview
 } from './Quizzes';
 
 
@@ -124,6 +125,7 @@ export default function Kambaz() {
             <Route path="Quizzes/:quizId/results" element={<QuizResults />} />
             <Route path="Quizzes" element={<Navigate to="/Kambaz/Dashboard" />} />
             <Route path="Courses" element={<Navigate to="/Kambaz/Dashboard" />} />
+            <Route path="Quizzes/:quizId/preview" element={<QuizPreview />} />
           </Routes>
         </div>
       </div>

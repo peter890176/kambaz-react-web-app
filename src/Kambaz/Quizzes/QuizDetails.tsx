@@ -210,7 +210,7 @@ function QuizDetails() {
               <Button 
                 variant="outline-secondary" 
                 className="me-2"
-                onClick={() => navigate(`/Kambaz/Quizzes/${quizId}/preview`)}
+                onClick={() => {console.log("here"); navigate(`/Kambaz/Quizzes/${quizId}/preview`)}}
               >
                 <FaEye className="me-1" /> Preview
               </Button>
