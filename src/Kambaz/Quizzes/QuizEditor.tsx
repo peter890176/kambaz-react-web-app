@@ -231,7 +231,7 @@ function QuizEditor() {
     
     // Check if any questions are unconfirmed
     if (confirmedQuestions.includes(false)) {
-      setError("All questions must be confirmed before saving. Please confirm each question by clicking the 'Confirm Question' button.");
+      setError("All questions must be saved before saving the quiz. Please save each question by clicking the 'Save Question' button.");
       setActiveTab('questions');
       return; // Prevent saving
     }
@@ -708,7 +708,7 @@ function QuizEditor() {
                 <div className="d-flex align-items-center">
                   <FaExclamationCircle className="me-2" />
                   <div>
-                    <strong>Unconfirmed questions detected.</strong> Please confirm all questions before saving.
+                    <strong>Unsaved questions detected.</strong> Please save all questions before saving the quiz.
                   </div>
                 </div>
               </Alert>
@@ -745,13 +745,13 @@ function QuizEditor() {
                         <div className={`question-card ${!confirmedQuestions[index] ? 'unconfirmed-question' : 'confirmed-question'}`}>
                           {!confirmedQuestions[index] && (
                             <div className="unconfirmed-badge">
-                              <Badge bg="warning" className="mb-2">Needs Confirmation</Badge>
+                              <Badge bg="warning" className="mb-2">Needs Saving</Badge>
                             </div>
                           )}
                           {confirmedQuestions[index] && (
                             <div className="confirmed-badge">
                               <Badge bg="success" className="mb-2">
-                                <FaCheck className="me-1" /> Confirmed
+                                <FaCheck className="me-1" /> Saved
                               </Badge>
                             </div>
                           )}

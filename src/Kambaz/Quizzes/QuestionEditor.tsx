@@ -16,7 +16,8 @@ import {
   FaEdit, 
   FaCheck, 
   FaEye,
-  FaTimes 
+  FaTimes,
+  FaSave
 } from 'react-icons/fa';
 import './QuestionEditor.css';
 
@@ -480,10 +481,10 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
             Cancel
           </Button>
           <Button 
-            variant="danger" 
+            variant="success" 
             onClick={saveQuestion}
           >
-            <FaCheck className="me-1" /> Confirm Question
+            <FaSave className="me-1" /> Save Question
           </Button>
         </div>
       </Card.Body>
