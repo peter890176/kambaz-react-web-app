@@ -5,7 +5,8 @@ import {
   getQuizzesForCourse, 
   deleteQuiz,
   publishQuiz,
-  unpublishQuiz
+  unpublishQuiz,
+  createAttempt
 } from './api';
 import { 
   Button, 
@@ -436,9 +437,31 @@ function QuizzesList() {
                     <Col xs={3} className="d-flex justify-content-end py-3 pe-3 quiz-actions">
                       {/* Show Take Quiz button if attempt is allowed */}
                       {!studentAttempts[quiz._id] && (
-                        <Button 
+                        <Button
                           variant="success"
-                          onClick={() => navigate(`/Kambaz/Courses/${cid}/Quizzes/${quiz._id}/attempt`)}
+                          onClick={async () => {
+                            try {
+                              console.log(`Attempting to start quiz: ${quiz._id}`);
+                              const response = await createAttempt(quiz._id);
+                              
+                              if (response && response.data && response.data._id) {
+                                const newAttemptId = response.data._id;
+                                console.log(`Attempt created: ${newAttemptId}, navigating to attempt page.`);
+                                navigate(`/Kambaz/Courses/${cid}/Quizzes/${quiz._id}/attempt`, {
+                                  state: {
+                                    attemptId: newAttemptId,
+                                    courseId: cid
+                                  }
+                                });
+                              } else {
+                                console.error("Failed to create quiz attempt or missing attempt ID in response:", response);
+                                alert("Failed to start quiz. Attempt data is missing.");
+                              }
+                            } catch (error: any) {
+                              console.error("Error starting quiz attempt:", error);
+                              alert(`Failed to start quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+                            }
+                          }}
                         >
                           Take Quiz
                         </Button>
