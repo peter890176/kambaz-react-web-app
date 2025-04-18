@@ -6,7 +6,8 @@ import {
   deleteQuiz,
   publishQuiz,
   unpublishQuiz,
-  createAttempt
+  createAttempt,
+  getAttemptsForQuiz
 } from './api';
 import { 
   Button, 
@@ -53,6 +54,14 @@ interface Attempt {
   completed: boolean;
 }
 
+// Format date display helper
+const formatDate = (dateString?: Date) => {
+  if (!dateString) return 'No date specified'; 
+  const date = new Date(dateString);
+  // Format to MM/DD/YYYY HH:MM AM/PM
+  return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+};
+
 function QuizzesList() {
   const { cid } = useParams<{ cid: string }>();
   const navigate = useNavigate();
@@ -62,7 +71,7 @@ function QuizzesList() {
   const [sortBy, setSortBy] = useState<'name' | 'dueDate' | 'availableDate'>('name');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [quizToDelete, setQuizToDelete] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<'student' | 'instructor'>('instructor'); // Default as instructor, will be updated from user data
+  const [userRole, setUserRole] = useState<'student' | 'instructor' | null>(null); // Initialize as null
   const [studentAttempts, setStudentAttempts] = useState<Record<string, Attempt>>({});
   const { currentUser } = useSelector((state: any) => state.accountReducer);
 
@@ -70,17 +79,15 @@ function QuizzesList() {
   useEffect(() => {
     if (currentUser && currentUser.role) {
       console.log("Current user role:", currentUser.role);
-      // Map FACULTY role to 'instructor' and STUDENT role to 'student'
-      if (currentUser.role === 'FACULTY') {
+      if (currentUser.role === 'FACULTY' || currentUser.role === 'INSTRUCTOR') {
         setUserRole('instructor');
       } else if (currentUser.role === 'STUDENT') {
         setUserRole('student');
-      } else if (currentUser.role === 'INSTRUCTOR') {
-        setUserRole('instructor');
       } else {
-        // Default to student for any other role
-        setUserRole('student');
+        setUserRole(null); // Handle other roles if necessary, or default
       }
+    } else {
+        setUserRole(null); // No user or role
     }
   }, [currentUser]);
 
@@ -116,10 +123,79 @@ function QuizzesList() {
     }
   };
 
-  // Fetch quizzes on initial load
+  // Fetch quizzes on initial load or when course ID changes
   useEffect(() => {
-    fetchQuizzes();
+    if (cid) { // Ensure cid is available
+         fetchQuizzes();
+    } else {
+        setError("Course ID is missing.");
+        setQuizzes([]); // Clear quizzes if no course ID
+    }
   }, [cid]);
+
+  // 2. Add useEffect to fetch student attempts
+  useEffect(() => {
+    // Only run if user is student and quizzes list is populated
+    if (userRole === 'student' && quizzes.length > 0 && cid) {
+      const fetchAllAttempts = async () => {
+        console.log("Fetching attempts for student:", currentUser?._id);
+        // Can reuse loading state or add a dedicated one
+        // setLoading(true);
+        try {
+          const attemptPromises = quizzes.map(quiz =>
+            getAttemptsForQuiz(quiz._id) // Call API for each quiz
+              .then(attemptsArray => {
+                // Assuming API returns an array of attempts
+                if (Array.isArray(attemptsArray) && attemptsArray.length > 0) {
+                  // Sort by startTime descending to find the last attempt
+                  const sortedAttempts = [...attemptsArray].sort((a, b) => {
+                      if (a.startTime && b.startTime) {
+                          return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+                      }
+                      // Fallback to _id if startTime is missing (assuming chronological)
+                       return b._id.localeCompare(a._id);
+                  });
+                  return { quizId: quiz._id, lastAttempt: sortedAttempts[0] }; // Return object with quizId and last attempt
+                }
+                return { quizId: quiz._id, lastAttempt: null }; // No attempts found
+              })
+              .catch(error => {
+                console.error(`Failed to get attempts for quiz ${quiz._id}:`, error);
+                return { quizId: quiz._id, lastAttempt: null }; // Handle individual fetch error
+              })
+          );
+
+          // Wait for all requests to complete
+          const results = await Promise.all(attemptPromises);
+
+          // Convert results to a { quizId: attempt } map
+          const newAttemptsMap: Record<string, Attempt> = {};
+          results.forEach(result => {
+            if (result.lastAttempt) {
+              newAttemptsMap[result.quizId] = result.lastAttempt;
+            }
+          });
+
+          console.log("Fetched student attempts map:", newAttemptsMap);
+          setStudentAttempts(newAttemptsMap); // Update state
+
+        } catch (error) {
+          console.error("Error fetching student attempts:", error);
+          // Optionally set an error state
+        } finally {
+          // setLoading(false); // If loading state was used
+        }
+      };
+
+      fetchAllAttempts();
+    }
+    // Clear attempts if user is not a student or no quizzes
+    else if (userRole !== 'student' || quizzes.length === 0) {
+         console.log("Resetting student attempts.");
+         setStudentAttempts({});
+     }
+     // Dependencies: re-run when quizzes, userRole, cid, or currentUser change
+  }, [quizzes, userRole, cid, currentUser]); // Added currentUser to ensure student ID is available
 
   // Create new quiz
   const handleCreateQuiz = () => {
@@ -223,36 +299,31 @@ function QuizzesList() {
     const now = new Date();
     const availableDate = quiz.availableDate ? new Date(quiz.availableDate) : null;
     const untilDate = quiz.untilDate ? new Date(quiz.untilDate) : null;
-    
+
+    // Condition 1: Before Available Date
     if (availableDate && now < availableDate) {
-      return { 
-        status: 'Not Available Yet', 
-        label: `Available on: ${availableDate.toLocaleDateString()} ${availableDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`,
+      return {
+        status: `Not available until ${formatDate(availableDate)}`,
+        label: `Available on: ${formatDate(availableDate)}`,
         color: 'secondary'
       };
     }
-    
+
+    // Condition 2: After Until Date
     if (untilDate && now > untilDate) {
-      return { 
-        status: 'Closed', 
+      return {
+        status: 'Closed',
         label: 'Ended',
-        color: 'dark' 
+        color: 'dark'
       };
     }
-    
-    return { 
-      status: 'Available', 
-      label: 'Available',
-      color: 'success' 
-    };
-  };
 
-  // Format date display
-  const formatDate = (dateString?: Date) => {
-    if (!dateString) return 'No due date';
-    
-    const date = new Date(dateString);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+    // Condition 3: Between Available and Until (or no Until)
+    return {
+      status: 'Available',
+      label: 'Available',
+      color: 'success'
+    };
   };
 
   // Empty state component
