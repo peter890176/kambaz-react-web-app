@@ -171,10 +171,12 @@ function QuizEditor() {
         { text: 'Option 1', isCorrect: false },
         { text: 'Option 2', isCorrect: false }
       ],
-      isEditing: true  // New questions default to edit mode
+      isEditing: false  // Default to preview mode
     };
     
     setQuestions([...questions, newQuestion]);
+    // Mark the new question as not saved initially
+    setConfirmedQuestions([...confirmedQuestions, false]);
   };
 
   // Delete question
@@ -643,20 +645,6 @@ function QuizEditor() {
                   <h5 className="mb-3">Time Settings</h5>
                   <Row>
                     <Col md={4}>
-                      {/* Due date */}
-                      <Form.Group className="mb-3">
-                        <Form.Label>
-                          <FaCalendarAlt className="me-2" />
-                          Due Date
-                        </Form.Label>
-                        <Form.Control 
-                          type="datetime-local" 
-                          value={dueDate} 
-                          onChange={(e) => setDueDate(e.target.value)}
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
                       {/* Available from date */}
                       <Form.Group className="mb-3">
                         <Form.Label>
@@ -667,6 +655,20 @@ function QuizEditor() {
                           type="datetime-local" 
                           value={availableDate} 
                           onChange={(e) => setAvailableDate(e.target.value)}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      {/* Due date */}
+                      <Form.Group className="mb-3">
+                        <Form.Label>
+                          <FaCalendarAlt className="me-2" />
+                          Due Date
+                        </Form.Label>
+                        <Form.Control 
+                          type="datetime-local" 
+                          value={dueDate} 
+                          onChange={(e) => setDueDate(e.target.value)}
                         />
                       </Form.Group>
                     </Col>

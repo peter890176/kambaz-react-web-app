@@ -56,14 +56,14 @@ const QuestionEditor: React.FC<QuestionEditorProps> = ({
   isNew = false
 }) => {
   const [editingQuestion, setEditingQuestion] = useState<Question>({...question});
-  const [isEditing, setIsEditing] = useState<boolean>(isNew || question.isEditing || false);
+  const [isEditing, setIsEditing] = useState<boolean>(question.isEditing || false);
   const [originalQuestion, setOriginalQuestion] = useState<Question>({...question});
 
   // Update local state when external question data changes
   useEffect(() => {
     setEditingQuestion({...question});
     setOriginalQuestion({...question});
-    setIsEditing(isNew || question.isEditing || false);
+    setIsEditing(question.isEditing || false);
   }, [question, isNew]);
 
   // Handle question field changes
