@@ -227,11 +227,7 @@ function QuizEditor() {
   const handleSave = async (e: React.FormEvent, shouldPublish: boolean = false) => {
     e.preventDefault();
 
-    // Validate quiz has at least one question
-    if (questions.length === 0) {
-      setError("Quiz must contain at least one question. Please add a question before saving.");
-      return; // Prevent saving
-    }
+
     
     // Check if any questions are unconfirmed
     if (confirmedQuestions.includes(false)) {
