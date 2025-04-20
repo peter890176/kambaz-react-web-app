@@ -21,7 +21,6 @@ import { AppDispatch } from './store';
 import * as enrollmentClient from "./Enrollments/client";
 
 export default function Dashboard({ 
-  enrolling, 
 }: { 
   enrolling: boolean; 
   setEnrolling: (enrolling: boolean) => void;

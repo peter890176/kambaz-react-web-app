@@ -6,8 +6,7 @@ import {
   Button, 
   InputGroup, 
   Badge, 
-  Row, 
-  Col,
+
   ButtonGroup
 } from 'react-bootstrap';
 import { 
@@ -15,7 +14,7 @@ import {
   FaPlus, 
   FaEdit, 
   FaCheck, 
-  FaEye,
+
   FaTimes,
   FaSave
 } from 'react-icons/fa';

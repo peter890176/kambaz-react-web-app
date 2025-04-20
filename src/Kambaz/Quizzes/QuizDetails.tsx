@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getQuizById, publishQuiz, unpublishQuiz, createAttempt, getAttemptsForQuiz } from './api';
-import { Container, Button, Card, Badge, ListGroup, Alert, Row, Col, Table } from 'react-bootstrap';
-import { FaEdit, FaPlay, FaEye, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaLock, FaHistory, FaArrowLeft } from 'react-icons/fa';
+import { Container, Button, Card, Badge, ListGroup, Alert,  Table } from 'react-bootstrap';
+import { FaEdit, FaPlay, FaEye, FaHistory, FaArrowLeft } from 'react-icons/fa';
 import './QuizDetails.css';
 import { useSelector } from 'react-redux';
 
@@ -100,27 +100,11 @@ function QuizDetails({ courseId }: QuizDetailsProps) {
     fetchData();
   }, [quizId, isStudent, courseId]);
 
-  const handleEditQuiz = () => {
-    navigate(`/Kambaz/Quizzes/${quizId}/edit`);
-  };
 
-  const handlePreviewQuiz = () => {
-    navigate(`/Kambaz/Quizzes/${quizId}/preview`);
-  };
 
-  const handlePublishToggle = async () => {
-    if (!quiz) return;
-    
-    try {
-      const response = quiz.published 
-        ? await unpublishQuiz(quiz._id)
-        : await publishQuiz(quiz._id);
-      
-      setQuiz(response.data);
-    } catch (err: any) {
-      setError(`${quiz.published ? 'Unpublish' : 'Publish'} quiz failed: ${err.message}`);
-    }
-  };
+
+
+
 
   const handleStartQuiz = async () => {
     if (!quiz) return;

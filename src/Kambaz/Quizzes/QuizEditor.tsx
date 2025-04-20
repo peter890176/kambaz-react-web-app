@@ -12,15 +12,15 @@ import {
   Nav, 
   Tab, 
   InputGroup,
-  Badge,
-  FormCheck 
+  Badge
+
 } from 'react-bootstrap';
 import { createQuiz, getQuizById, updateQuiz, publishQuiz } from './api';
 import { 
   FaSave, 
-  FaArrowLeft, 
+
   FaPlus, 
-  FaTrash, 
+
   FaCalendarAlt, 
   FaLock, 
   FaClock,
@@ -90,8 +90,7 @@ function QuizEditor() {
   const [questions, setQuestions] = useState<Question[]>([]);
   // Track which questions have been confirmed
   const [confirmedQuestions, setConfirmedQuestions] = useState<boolean[]>([]);
-  // Track if the current question form is dirty (has unsaved changes)
-  const [hasUnconfirmedQuestion, setHasUnconfirmedQuestion] = useState(false);
+
 
   // If in edit mode, load existing quiz data
   useEffect(() => {
@@ -191,12 +190,7 @@ function QuizEditor() {
     setConfirmedQuestions(newConfirmedQuestions);
   };
 
-  // Confirm the question
-  const confirmQuestion = (index: number) => {
-    const newConfirmedQuestions = [...confirmedQuestions];
-    newConfirmedQuestions[index] = true;
-    setConfirmedQuestions(newConfirmedQuestions);
-  };
+
 
   // Update question
   const updateQuestion = (index: number, updatedQuestion: Question) => {
@@ -238,8 +232,7 @@ function QuizEditor() {
       return; // Prevent saving
     }
     
-    // Calculate total points
-    const totalPoints = calculateTotalPoints();
+
     
     // Collect quiz data
     const quizData = {

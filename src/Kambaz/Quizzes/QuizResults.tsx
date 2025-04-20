@@ -27,25 +27,20 @@ function QuizResults({ courseId: propCourseId }: QuizResultsProps) {
   
   // Get parameters passed from location
   const attemptId = location.state?.attemptId;
-  const score = location.state?.score;
-  const totalPoints = location.state?.totalPoints;
   const courseIdFromState = location.state?.courseId;
   
   // Determine the effective courseId from multiple sources
   const effectiveCourseId = propCourseId || cid || courseIdFromState || null;
 
-  // Function to directly navigate to homepage or main quizzes page
-  const safeNavigate = () => {
-    // Navigate to main dashboard as a fallback
-    navigate('/Kambaz/Dashboard');
-  };
 
   useEffect(() => {
-    if (!quizId) return;
+    // Added check for currentUser._id
+    if (!quizId || !currentUser?._id) return;
     
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null); // Reset error at the beginning
         
         // Get quiz details
         const quizResponse = await getQuizById(quizId);
@@ -57,28 +52,59 @@ function QuizResults({ courseId: propCourseId }: QuizResultsProps) {
         console.log("Course ID in quiz data:", quizData.course);
         console.log("CourseId from props/params/state:", effectiveCourseId);
         
-        // Get all quiz attempt records
+        // Get all quiz attempt records for this quiz
         const attemptsResponse = await getAttemptsForQuiz(quizId);
-        if (Array.isArray(attemptsResponse) && attemptsResponse.length > 0) {
-          // Sort by creation time, newest first
-          const sortedAttempts = attemptsResponse.sort((a, b) => 
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-          
-          setAllAttempts(sortedAttempts);
-          
-          // If there's an attemptId from location, use that attempt
-          // Otherwise use the latest attempt
-          const targetAttempt = attemptId 
-            ? sortedAttempts.find(a => a._id === attemptId)
-            : sortedAttempts[0];
+        let userAttempts: any[] = [];
+        if (Array.isArray(attemptsResponse)) {
+            // Filter attempts for the current user
+            userAttempts = attemptsResponse.filter(att => att.user === currentUser._id);
             
-          if (targetAttempt) {
-            setAttempt(targetAttempt);
-          } else if (sortedAttempts.length > 0) {
-            setAttempt(sortedAttempts[0]);
-          }
+            // Sort user's attempts by creation time, newest first
+            userAttempts.sort((a, b) => 
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            
+            setAllAttempts(userAttempts); // Store only user's attempts
+            
+            // If there's an attemptId from location, use that attempt
+            // Otherwise use the latest attempt
+            const targetAttempt = attemptId 
+              ? userAttempts.find(a => a._id === attemptId)
+              : userAttempts[0];
+              
+            if (targetAttempt) {
+              setAttempt(targetAttempt);
+            } else if (userAttempts.length > 0) {
+              setAttempt(userAttempts[0]); // Set latest if no specific ID
+            } else {
+               setAttempt(null); // No attempts found for this user
+            }
+        } else {
+          setAllAttempts([]);
+          setAttempt(null);
         }
+
+        // --- Logic to set attemptLimitReached ---
+        if (quizData) {
+          if (quizData.multipleAttempts) {
+            const allowed = quizData.attemptsAllowed;
+            if (typeof allowed === 'number' && allowed > 0) {
+              // Limit exists, check if reached
+              setAttemptLimitReached(userAttempts.length >= allowed);
+            } else {
+              // Multiple attempts allowed, but no specific limit (unlimited)
+              setAttemptLimitReached(false);
+            }
+          } else {
+            // Multiple attempts NOT allowed, limit reached after 1 attempt
+            setAttemptLimitReached(userAttempts.length >= 1);
+          }
+        } else {
+          // Default if quizData is somehow null
+          setAttemptLimitReached(false); 
+        }
+        // --- End logic ---
+
       } catch (err: any) {
         console.error('Failed to get quiz result data:', err);
         setError(err.message || 'Failed to get quiz results');
@@ -88,7 +114,7 @@ function QuizResults({ courseId: propCourseId }: QuizResultsProps) {
     };
     
     fetchData();
-  }, [quizId, attemptId, effectiveCourseId]);
+  }, [quizId, attemptId, effectiveCourseId, currentUser?._id]); // Added currentUser._id dependency
 
   // Function to return to the quiz list page with courseId
   const handleBackToList = () => {
